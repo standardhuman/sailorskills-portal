@@ -1,0 +1,28 @@
+{
+  "name": "sailorskills-portal",
+  "version": "1.0.0",
+  "description": "Sailorskills Customer Portal - Service history, invoices, and account management",
+  "main": "portal.html",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [
+    "portal",
+    "customer-portal",
+    "service-history",
+    "invoices",
+    "sailorskills"
+  ],
+  "author": "Sailor Skills",
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "@supabase/supabase-js": "^2.57.4"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.1",
+    "vite": "^6.3.5"
+  }
+}

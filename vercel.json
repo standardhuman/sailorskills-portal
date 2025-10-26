@@ -1,0 +1,10 @@
+{
+  "rewrites": [
+    { "source": "/", "destination": "/login.html" },
+    { "source": "/portal", "destination": "/portal.html" },
+    { "source": "/api/:path*", "destination": "/api/:path*" }
+  ],
+  "git": {
+    "submodules": true
+  }
+}

@@ -155,8 +155,15 @@ async function loadBoatData() {
 async function loadPaintCondition(boatId) {
   const { paintData, error } = await getPaintCondition(boatId);
 
-  if (error || !paintData) {
+  if (error) {
     console.error('Error loading paint condition:', error);
+    return;
+  }
+
+  if (!paintData) {
+    // No service history yet - hide section
+    const section = document.getElementById('paint-condition-section');
+    section.style.display = 'none';
     return;
   }
 

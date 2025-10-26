@@ -20,13 +20,14 @@ export async function getLatestServiceLog(boatId) {
       .eq('boat_id', boatId)
       .order('service_date', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle(); // Use maybeSingle() to return null if no rows exist
 
     if (error) {
       console.error('Error fetching latest service log:', error);
       return { serviceLog: null, error };
     }
 
+    // data will be null if no service logs exist - this is OK
     return { serviceLog: data, error: null };
   } catch (err) {
     console.error('Exception in getLatestServiceLog:', err);
@@ -76,13 +77,14 @@ export async function getBoatPlaylist(boatId) {
       .select('*')
       .eq('boat_id', boatId)
       .eq('is_public', true)
-      .single();
+      .maybeSingle(); // Use maybeSingle() to return null if no playlist exists
 
-    if (error && error.code !== 'PGRST116') { // Not a "not found" error
+    if (error) {
       console.error('Error fetching playlist:', error);
       return { playlist: null, error };
     }
 
+    // data will be null if no playlist exists - this is OK
     return { playlist: data, error: null };
   } catch (err) {
     console.error('Exception in getBoatPlaylist:', err);

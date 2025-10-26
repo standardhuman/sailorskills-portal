@@ -197,12 +197,46 @@ async function loadServiceMedia(boatId) {
   const section = document.getElementById('videos-section');
   const grid = document.getElementById('video-grid');
 
-  // TODO: For now, show a placeholder since videos aren't implemented yet
-  // Once we have YouTube playlist integration, we'll populate this
-  if (!media || media.length === 0) {
+  // Filter media to only show videos (not photos for now)
+  const videos = media?.filter(item => item.id && item.thumbnail && item.url) || [];
+
+  if (videos.length === 0) {
     grid.innerHTML = '<div class="no-videos-message">No videos available yet. Videos from your latest service will appear here.</div>';
     section.style.display = 'block';
+    return;
   }
+
+  // Display video thumbnails
+  grid.innerHTML = ''; // Clear existing content
+
+  videos.forEach(video => {
+    const videoCard = document.createElement('div');
+    videoCard.className = 'video-thumbnail';
+    videoCard.innerHTML = `
+      <img src="${escapeHtml(video.thumbnail)}" alt="${escapeHtml(video.title)}">
+      <div class="video-play-overlay">▶</div>
+    `;
+
+    // Click to open video in new tab
+    videoCard.addEventListener('click', () => {
+      window.open(video.url, '_blank');
+    });
+
+    grid.appendChild(videoCard);
+  });
+
+  section.style.display = 'block';
+}
+
+/**
+ * Escape HTML to prevent XSS
+ * @param {string} text - Text to escape
+ * @returns {string} Escaped text
+ */
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
 }
 
 /**

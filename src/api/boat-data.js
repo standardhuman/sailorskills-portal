@@ -193,9 +193,8 @@ export async function getServiceMedia(boatId) {
       return { media: photos, error: null };
     }
 
-    // Fetch videos from playlist, filtered by service date
-    const serviceDate = serviceLog?.service_date;
-    const { videos, error: videosError } = await getPlaylistVideos(playlistId, serviceDate);
+    // Fetch videos from playlist (most recent videos, not filtered by service date)
+    const { videos, error: videosError } = await getPlaylistVideos(playlistId, null);
 
     if (videosError) {
       console.error('Error fetching playlist videos:', videosError);

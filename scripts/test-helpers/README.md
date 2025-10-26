@@ -239,6 +239,48 @@ const total = await queryValue(
 );
 ```
 
+## 🔄 Running Migrations
+
+You can run database migrations directly from Claude Code!
+
+### Quick Start
+
+```bash
+# 1. Create a migration file
+cat > migrations/add_column.sql << 'EOF'
+ALTER TABLE customers ADD COLUMN IF NOT EXISTS notes TEXT;
+EOF
+
+# 2. Test with dry-run
+node scripts/test-helpers/run-migration.mjs migrations/add_column.sql --dry-run
+
+# 3. Run the migration
+node scripts/test-helpers/run-migration.mjs migrations/add_column.sql
+```
+
+### Or use psql directly
+
+```bash
+source db-env.sh
+psql "$DATABASE_URL" -f migrations/add_column.sql
+```
+
+### Features
+
+- **Transaction support** - Automatic rollback on error (default)
+- **Dry-run mode** - Test migrations without making changes
+- **Idempotent** - Use `IF NOT EXISTS` to run safely multiple times
+- **Safe** - All changes logged and verified
+
+### Full Documentation
+
+See `MIGRATIONS.md` in this directory for:
+- Migration best practices
+- Common patterns (add columns, indexes, tables)
+- Safety guidelines
+- Rollback strategies
+- Complete examples
+
 ## 🐛 Troubleshooting
 
 ### "DATABASE_URL not found"

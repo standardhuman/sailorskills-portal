@@ -228,12 +228,62 @@ export async function requireAuth() {
 }
 
 /**
+ * Check if user is an admin
+ * @param {string} userId - User ID
+ * @returns {Promise<boolean>}
+ */
+export async function isAdmin(userId) {
+  try {
+    const { data, error } = await supabase
+      .from('customer_accounts')
+      .select('is_admin')
+      .eq('id', userId)
+      .single();
+
+    if (error) {
+      console.error('Error checking admin status:', error);
+      return false;
+    }
+
+    return data?.is_admin === true;
+  } catch (error) {
+    console.error('Error in isAdmin check:', error);
+    return false;
+  }
+}
+
+/**
  * Get user's accessible boats
+ * If user is admin, returns ALL boats. Otherwise returns only boats with granted access.
  * @param {string} userId - User ID
  * @returns {Promise<{boats, error}>}
  */
 export async function getUserBoats(userId) {
   try {
+    // Check if user is admin
+    const adminStatus = await isAdmin(userId);
+
+    if (adminStatus) {
+      // Admin: return ALL boats
+      const { data, error } = await supabase
+        .from('boats')
+        .select('*')
+        .order('name', { ascending: true });
+
+      if (error) throw error;
+
+      // Format boats with admin flag
+      const boats = data.map(boat => ({
+        ...boat,
+        isPrimary: false, // Admin doesn't have a primary boat
+        grantedAt: null,
+        isAdminView: true // Flag to indicate admin view
+      }));
+
+      return { boats, error: null };
+    }
+
+    // Regular user: return only boats with access
     const { data, error } = await supabase
       .from('customer_boat_access')
       .select(`
@@ -247,7 +297,8 @@ export async function getUserBoats(userId) {
     const boats = data.map(access => ({
       ...access.boat,
       isPrimary: access.is_primary,
-      grantedAt: access.granted_at
+      grantedAt: access.granted_at,
+      isAdminView: false
     }));
 
     return { boats, error: null };

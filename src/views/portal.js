@@ -3,7 +3,7 @@
  * Main landing page for authenticated customers
  */
 
-import { requireAuth, getCurrentUser, getUserBoats, logout } from '../auth/auth.js';
+import { requireAuth, getCurrentUser, getUserBoats, logout, isAdmin } from '../auth/auth.js';
 import { getPaintCondition, getPaintStatus, daysSinceService, getServiceMedia } from '../api/boat-data.js';
 
 // Require authentication
@@ -17,6 +17,7 @@ if (!isAuth) {
 let currentUser = null;
 let userBoats = [];
 let selectedBoatId = null;
+let isAdminUser = false;
 
 /**
  * Initialize portal
@@ -33,8 +34,16 @@ async function init() {
 
   currentUser = user;
 
-  // Display user email
-  document.getElementById('user-email').textContent = user.email;
+  // Check if user is admin
+  isAdminUser = await isAdmin(user.id);
+
+  // Display user email with admin badge if applicable
+  const userEmailEl = document.getElementById('user-email');
+  if (isAdminUser) {
+    userEmailEl.innerHTML = `${user.email} <span style="display: inline-block; margin-left: 8px; padding: 2px 8px; background: #ff6b6b; color: white; border-radius: 4px; font-size: 11px; font-weight: 600;">ADMIN</span>`;
+  } else {
+    userEmailEl.textContent = user.email;
+  }
 
   // Load boats
   await loadBoats();
@@ -56,9 +65,21 @@ async function loadBoats() {
 
   userBoats = boats;
 
-  // If multiple boats, show selector
-  if (boats.length > 1) {
-    document.getElementById('boat-selector').style.display = 'block';
+  // Show selector if multiple boats OR if user is admin
+  const shouldShowSelector = boats.length > 1 || (isAdminUser && boats.length > 0);
+
+  if (shouldShowSelector) {
+    const selectorEl = document.getElementById('boat-selector');
+    selectorEl.style.display = 'block';
+
+    // Add admin indicator to selector label if admin
+    if (isAdminUser) {
+      const label = selectorEl.querySelector('label');
+      if (label && !label.querySelector('.admin-view-badge')) {
+        label.innerHTML = `Select Boat: <span class="admin-view-badge" style="color: #ff6b6b; font-size: 11px; font-weight: 600;">(Admin View - All Boats)</span>`;
+      }
+    }
+
     populateBoatSelector(boats);
   }
 
@@ -75,7 +96,7 @@ async function loadBoats() {
     }
 
     // Update selector if visible
-    if (boats.length > 1) {
+    if (shouldShowSelector) {
       document.getElementById('current-boat').value = selectedBoatId;
     }
 

@@ -74,15 +74,21 @@ cd /Users/brian/app-development/sailorskills-repos/sailorskills-operations
 supabase functions deploy get-playlist-videos
 ```
 
-## Step 5: Add YouTube API Key to Supabase Secrets
+## Step 5: Add YouTube OAuth Credentials to Supabase Secrets
 
-If not already configured:
+If not already configured, set BOATY's OAuth credentials:
 
 ```bash
-supabase secrets set YOUTUBE_API_KEY=your-api-key-here
+# Get credentials from BOATY directory:
+# - client_id and client_secret from: sailorskills-video/client_secrets.json
+# - refresh_token from: sailorskills-video/token.json
+
+supabase secrets set YOUTUBE_CLIENT_ID=<client_id_from_client_secrets>
+supabase secrets set YOUTUBE_CLIENT_SECRET=<client_secret_from_client_secrets>
+supabase secrets set YOUTUBE_REFRESH_TOKEN=<refresh_token_from_token_json>
 ```
 
-Get API key from Google Cloud Console → APIs & Services → Credentials
+**Why OAuth?** Unlisted playlists require OAuth authentication (API key only works for public playlists)
 
 ## Step 6: Test in Portal
 
@@ -123,15 +129,15 @@ Get API key from Google Cloud Console → APIs & Services → Credentials
    - Open DevTools → Console
    - Look for errors calling edge function
 
-4. **Verify API key**:
+4. **Verify OAuth credentials**:
    ```bash
    supabase secrets list
    ```
-   Should show `YOUTUBE_API_KEY`
+   Should show `YOUTUBE_CLIENT_ID`, `YOUTUBE_CLIENT_SECRET`, `YOUTUBE_REFRESH_TOKEN`
 
 5. **Check playlist privacy**:
-   - Playlist must be Public or Unlisted
-   - Private playlists won't work with API key
+   - Works with Public, Unlisted, AND Private playlists
+   - OAuth authentication allows access to all privacy levels
 
 ### Videos from wrong date
 
@@ -144,7 +150,7 @@ To test:
 
 ## Manual API Test
 
-Test the edge function directly:
+Test the edge function directly (requires OAuth to be configured):
 
 ```bash
 curl "https://fzygakldvvzxmahkdylq.supabase.co/functions/v1/get-playlist-videos?playlistId=PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf&serviceDate=2025-10-18" \
@@ -152,6 +158,8 @@ curl "https://fzygakldvvzxmahkdylq.supabase.co/functions/v1/get-playlist-videos?
 ```
 
 Should return JSON with videos array.
+
+**Note**: The edge function will use OAuth internally to access unlisted playlists. You don't need to pass OAuth tokens in the request - the function handles that automatically using the secrets configured in Supabase.
 
 ## Success Criteria
 

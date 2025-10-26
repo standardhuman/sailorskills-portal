@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up - Sailor Skills Customer Portal</title>
+
+  <!-- Montserrat Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Shared Styles -->
+  <link rel="stylesheet" href="/shared/src/ui/design-tokens.css">
+  <link rel="stylesheet" href="/shared/src/ui/styles.css">
+
+  <!-- Page Styles -->
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: var(--ss-font-family);
+      background: var(--ss-neutral-100);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: var(--ss-space-md);
+    }
+
+    .signup-container {
+      background: white;
+      padding: var(--ss-space-xl);
+      max-width: 500px;
+      width: 100%;
+      box-shadow: var(--ss-shadow-lg);
+      border-radius: var(--ss-radius-none);
+    }
+
+    .signup-header {
+      text-align: center;
+      margin-bottom: var(--ss-space-xl);
+    }
+
+    .signup-header h1 {
+      margin: 0 0 var(--ss-space-xs);
+      color: var(--ss-primary-600);
+      font-size: var(--ss-font-size-2xl);
+      font-weight: 700;
+    }
+
+    .signup-header p {
+      margin: 0;
+      color: var(--ss-neutral-600);
+      font-size: var(--ss-font-size-sm);
+    }
+
+    .form-group {
+      margin-bottom: var(--ss-space-md);
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: var(--ss-space-xs);
+      font-size: var(--ss-font-size-sm);
+      font-weight: 600;
+      color: var(--ss-neutral-700);
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: var(--ss-space-sm);
+      border: 1px solid var(--ss-neutral-300);
+      border-radius: var(--ss-radius-none);
+      font-size: var(--ss-font-size-sm);
+      font-family: var(--ss-font-family);
+      box-sizing: border-box;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--ss-primary-500);
+    }
+
+    .form-group small {
+      display: block;
+      margin-top: var(--ss-space-xs);
+      font-size: var(--ss-font-size-xs);
+      color: var(--ss-neutral-600);
+    }
+
+    .password-requirements {
+      background: var(--ss-neutral-100);
+      padding: var(--ss-space-sm);
+      margin-top: var(--ss-space-xs);
+      border-radius: var(--ss-radius-none);
+      font-size: var(--ss-font-size-xs);
+      color: var(--ss-neutral-700);
+    }
+
+    .password-requirements ul {
+      margin: var(--ss-space-xs) 0 0 0;
+      padding-left: var(--ss-space-md);
+    }
+
+    .password-requirements li {
+      margin-bottom: var(--ss-space-xs);
+    }
+
+    .btn {
+      width: 100%;
+      padding: var(--ss-space-sm) var(--ss-space-md);
+      border: none;
+      border-radius: var(--ss-radius-none);
+      font-size: var(--ss-font-size-sm);
+      font-weight: 600;
+      font-family: var(--ss-font-family);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--ss-primary-600);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--ss-primary-700);
+    }
+
+    .btn-primary:disabled {
+      background: var(--ss-neutral-400);
+      cursor: not-allowed;
+    }
+
+    .login-link {
+      text-align: center;
+      margin-top: var(--ss-space-lg);
+      padding-top: var(--ss-space-lg);
+      border-top: 1px solid var(--ss-neutral-200);
+    }
+
+    .login-link p {
+      margin: 0;
+      font-size: var(--ss-font-size-sm);
+      color: var(--ss-neutral-600);
+    }
+
+    .login-link a {
+      color: var(--ss-primary-600);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .login-link a:hover {
+      text-decoration: underline;
+    }
+
+    .alert {
+      padding: var(--ss-space-sm);
+      margin-bottom: var(--ss-space-md);
+      border-radius: var(--ss-radius-none);
+      font-size: var(--ss-font-size-sm);
+    }
+
+    .alert-success {
+      background: var(--ss-success-100);
+      color: var(--ss-success-700);
+      border: 1px solid var(--ss-success-300);
+    }
+
+    .alert-error {
+      background: var(--ss-error-100);
+      color: var(--ss-error-700);
+      border: 1px solid var(--ss-error-300);
+    }
+
+    .alert-info {
+      background: var(--ss-info-100);
+      color: var(--ss-info-700);
+      border: 1px solid var(--ss-info-300);
+    }
+  </style>
+</head>
+<body>
+  <div class="signup-container">
+    <div class="signup-header">
+      <h1>⚓ Sailor Skills</h1>
+      <p>Create Your Account</p>
+    </div>
+
+    <div id="alert-container"></div>
+
+    <form id="signup-form">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" required autocomplete="email">
+        <small>We'll send important updates about your boat to this email.</small>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required autocomplete="new-password" minlength="8">
+        <div class="password-requirements">
+          <strong>Password must:</strong>
+          <ul>
+            <li>Be at least 8 characters long</li>
+            <li>Include uppercase and lowercase letters</li>
+            <li>Include at least one number</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="confirm-password">Confirm Password</label>
+        <input type="password" id="confirm-password" name="confirm-password" required autocomplete="new-password">
+      </div>
+
+      <div class="form-group">
+        <label for="boat-slug">Boat Code (Optional)</label>
+        <input type="text" id="boat-slug" name="boat-slug" autocomplete="off">
+        <small>If you received an invitation, enter your boat code here to get instant access.</small>
+      </div>
+
+      <button type="submit" class="btn btn-primary" id="signup-btn">
+        Create Account
+      </button>
+    </form>
+
+    <div class="login-link">
+      <p>Already have an account? <a href="/login.html">Sign in</a></p>
+    </div>
+  </div>
+
+  <script type="module" src="/src/auth/signup.js"></script>
+</body>
+</html>

@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Messages - Sailor Skills Customer Portal</title>
+
+  <!-- Montserrat Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Shared Styles -->
+  <link rel="stylesheet" href="/shared/src/ui/design-tokens.css">
+  <link rel="stylesheet" href="/shared/src/ui/styles.css">
+
+  <!-- Page Styles -->
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: var(--ss-font-family);
+      background: var(--ss-neutral-100);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Portal Header */
+    .portal-header {
+      background: white;
+      border-bottom: 1px solid var(--ss-neutral-200);
+      padding: var(--ss-space-md) var(--ss-space-lg);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: var(--ss-shadow-sm);
+      flex-shrink: 0;
+    }
+
+    .header-left h1 {
+      color: var(--ss-primary-600);
+      font-size: var(--ss-font-size-xl);
+      font-weight: 700;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: var(--ss-space-md);
+    }
+
+    .user-email {
+      font-size: var(--ss-font-size-sm);
+      color: var(--ss-neutral-600);
+    }
+
+    .btn {
+      padding: var(--ss-space-xs) var(--ss-space-md);
+      border: none;
+      border-radius: var(--ss-radius-none);
+      font-size: var(--ss-font-size-sm);
+      font-weight: 600;
+      font-family: var(--ss-font-family);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-secondary {
+      background: var(--ss-neutral-200);
+      color: var(--ss-neutral-700);
+    }
+
+    .btn-secondary:hover {
+      background: var(--ss-neutral-300);
+    }
+
+    .btn-primary {
+      background: var(--ss-primary-600);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--ss-primary-700);
+    }
+
+    /* Portal Navigation */
+    .portal-nav {
+      background: white;
+      border-bottom: 1px solid var(--ss-neutral-200);
+      padding: 0 var(--ss-space-lg);
+      display: flex;
+      gap: var(--ss-space-md);
+      flex-shrink: 0;
+    }
+
+    .nav-link {
+      padding: var(--ss-space-md) var(--ss-space-sm);
+      text-decoration: none;
+      color: var(--ss-neutral-700);
+      font-size: var(--ss-font-size-sm);
+      font-weight: 500;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .nav-link:hover {
+      color: var(--ss-primary-600);
+    }
+
+    .nav-link.active {
+      color: var(--ss-primary-600);
+      border-bottom-color: var(--ss-primary-600);
+    }
+
+    .nav-badge {
+      position: absolute;
+      top: 8px;
+      right: -8px;
+      background: var(--ss-error-600);
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 10px;
+      min-width: 18px;
+      text-align: center;
+    }
+
+    /* Messages Layout */
+    .messages-container {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    .conversations-sidebar {
+      width: 320px;
+      background: white;
+      border-right: 1px solid var(--ss-neutral-200);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .sidebar-header {
+      padding: var(--ss-space-md);
+      border-bottom: 1px solid var(--ss-neutral-200);
+    }
+
+    .sidebar-header h2 {
+      font-size: var(--ss-font-size-lg);
+      color: var(--ss-neutral-900);
+    }
+
+    .conversation-list {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .conversation-item {
+      padding: var(--ss-space-md);
+      border-bottom: 1px solid var(--ss-neutral-200);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .conversation-item:hover {
+      background: var(--ss-neutral-50);
+    }
+
+    .conversation-item.active {
+      background: var(--ss-primary-50);
+      border-left: 3px solid var(--ss-primary-600);
+    }
+
+    .conversation-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--ss-space-xs);
+    }
+
+    .conversation-title {
+      font-weight: 600;
+      font-size: var(--ss-font-size-sm);
+      color: var(--ss-neutral-900);
+    }
+
+    .conversation-time {
+      font-size: var(--ss-font-size-xs);
+      color: var(--ss-neutral-600);
+    }
+
+    .conversation-preview {
+      font-size: var(--ss-font-size-xs);
+      color: var(--ss-neutral-600);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .unread-badge {
+      background: var(--ss-error-600);
+      color: white;
+      font-size: var(--ss-font-size-xs);
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 10px;
+      min-width: 20px;
+      text-align: center;
+    }
+
+    /* Message Thread */
+    .message-thread {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--ss-neutral-50);
+    }
+
+    .thread-header {
+      background: white;
+      padding: var(--ss-space-md);
+      border-bottom: 1px solid var(--ss-neutral-200);
+    }
+
+    .thread-header h3 {
+      font-size: var(--ss-font-size-lg);
+      color: var(--ss-neutral-900);
+    }
+
+    .messages-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--ss-space-md);
+    }
+
+    .message-bubble {
+      max-width: 70%;
+      margin-bottom: var(--ss-space-md);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .message-bubble.customer {
+      align-self: flex-end;
+      align-items: flex-end;
+    }
+
+    .message-bubble.admin {
+      align-self: flex-start;
+      align-items: flex-start;
+    }
+
+    .message-content {
+      background: white;
+      padding: var(--ss-space-sm) var(--ss-space-md);
+      border-radius: 12px;
+      box-shadow: var(--ss-shadow-sm);
+    }
+
+    .message-bubble.customer .message-content {
+      background: var(--ss-primary-600);
+      color: white;
+    }
+
+    .message-text {
+      font-size: var(--ss-font-size-sm);
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .message-attachments {
+      margin-top: var(--ss-space-sm);
+    }
+
+    .attachment-item {
+      display: flex;
+      align-items: center;
+      gap: var(--ss-space-xs);
+      padding: var(--ss-space-xs);
+      background: var(--ss-neutral-100);
+      border-radius: 4px;
+      margin-top: var(--ss-space-xs);
+      text-decoration: none;
+      color: var(--ss-neutral-700);
+      font-size: var(--ss-font-size-xs);
+    }
+
+    .message-bubble.customer .attachment-item {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+    }
+
+    .attachment-item:hover {
+      background: var(--ss-neutral-200);
+    }
+
+    .attachment-image {
+      max-width: 100%;
+      margin-top: var(--ss-space-xs);
+      border-radius: 4px;
+    }
+
+    .message-time {
+      font-size: var(--ss-font-size-xs);
+      color: var(--ss-neutral-500);
+      margin-top: var(--ss-space-xs);
+    }
+
+    /* Message Composer */
+    .message-composer {
+      background: white;
+      border-top: 1px solid var(--ss-neutral-200);
+      padding: var(--ss-space-md);
+    }
+
+    .composer-form {
+      display: flex;
+      flex-direction: column;
+      gap: var(--ss-space-sm);
+    }
+
+    .composer-input {
+      display: flex;
+      gap: var(--ss-space-sm);
+    }
+
+    #message-input {
+      flex: 1;
+      padding: var(--ss-space-sm);
+      border: 1px solid var(--ss-neutral-300);
+      border-radius: var(--ss-radius-none);
+      font-size: var(--ss-font-size-sm);
+      font-family: var(--ss-font-family);
+      resize: none;
+      min-height: 60px;
+      max-height: 120px;
+    }
+
+    #message-input:focus {
+      outline: none;
+      border-color: var(--ss-primary-500);
+    }
+
+    .composer-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .file-input-wrapper {
+      position: relative;
+    }
+
+    #file-input {
+      display: none;
+    }
+
+    .btn-file {
+      background: var(--ss-neutral-200);
+      color: var(--ss-neutral-700);
+      padding: var(--ss-space-xs) var(--ss-space-md);
+      border: none;
+      border-radius: var(--ss-radius-none);
+      font-size: var(--ss-font-size-sm);
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-file:hover {
+      background: var(--ss-neutral-300);
+    }
+
+    .selected-files {
+      font-size: var(--ss-font-size-xs);
+      color: var(--ss-neutral-600);
+    }
+
+    .empty-state {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: var(--ss-neutral-600);
+      padding: var(--ss-space-xl);
+    }
+
+    .empty-state p {
+      max-width: 400px;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      .conversations-sidebar {
+        width: 100%;
+      }
+
+      .message-thread {
+        display: none;
+      }
+
+      .message-thread.active {
+        display: flex;
+      }
+
+      .conversations-sidebar.hidden {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Portal Header -->
+  <header class="portal-header">
+    <div class="header-left">
+      <h1>⚓ Sailor Skills</h1>
+    </div>
+    <div class="header-right">
+      <span class="user-email" id="user-email">Loading...</span>
+      <button class="btn btn-secondary" id="logout-btn">Sign Out</button>
+    </div>
+  </header>
+
+  <!-- Portal Navigation -->
+  <nav class="portal-nav">
+    <a href="/portal.html" class="nav-link">Dashboard</a>
+    <a href="/portal-services.html" class="nav-link">Service History</a>
+    <a href="/portal-invoices.html" class="nav-link">Invoices</a>
+    <a href="/portal-messages.html" class="nav-link active">
+      Messages
+      <span class="nav-badge" id="unread-badge" style="display: none;">0</span>
+    </a>
+    <a href="/portal-request-service.html" class="nav-link">Request Service</a>
+    <a href="/portal-account.html" class="nav-link">Account</a>
+  </nav>
+
+  <!-- Messages Container -->
+  <div class="messages-container">
+    <!-- Conversations Sidebar -->
+    <div class="conversations-sidebar" id="conversations-sidebar">
+      <div class="sidebar-header">
+        <h2>Messages</h2>
+      </div>
+      <div class="conversation-list" id="conversation-list">
+        <div class="empty-state">
+          <p>Loading conversations...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Message Thread -->
+    <div class="message-thread" id="message-thread">
+      <div class="empty-state">
+        <p>Select a conversation to view messages</p>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/views/messages.js"></script>
+</body>
+</html>

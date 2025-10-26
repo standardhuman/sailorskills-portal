@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Request History - Sailor Skills Customer Portal</title>
+
+  <!-- Montserrat Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Shared Styles -->
+  <link rel="stylesheet" href="/shared/src/ui/design-tokens.css">
+  <link rel="stylesheet" href="/shared/src/ui/styles.css">
+
+  <!-- Page Styles -->
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: var(--ss-font-family);
+      background: var(--ss-neutral-100);
+    }
+
+    /* Portal Header */
+    .portal-header {
+      background: white;
+      border-bottom: 1px solid var(--ss-neutral-200);
+      padding: var(--ss-space-md) var(--ss-space-lg);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: var(--ss-shadow-sm);
+    }
+
+    .header-left h1 {
+      color: var(--ss-primary-600);
+      font-size: var(--ss-font-size-xl);
+      font-weight: 700;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: var(--ss-space-md);
+    }
+
+    .user-email {
+      font-size: var(--ss-font-size-sm);
+      color: var(--ss-neutral-600);
+    }
+
+    .btn {
+      padding: var(--ss-space-xs) var(--ss-space-md);
+      border: none;
+      border-radius: var(--ss-radius-none);
+      font-size: var(--ss-font-size-sm);
+      font-weight: 600;
+      font-family: var(--ss-font-family);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-secondary {
+      background: var(--ss-neutral-200);
+      color: var(--ss-neutral-700);
+    }
+
+    .btn-secondary:hover {
+      background: var(--ss-neutral-300);
+    }
+
+    .btn-primary {
+      background: var(--ss-primary-600);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--ss-primary-700);
+    }
+
+    /* Portal Navigation */
+    .portal-nav {
+      background: white;
+      border-bottom: 1px solid var(--ss-neutral-200);
+      padding: 0 var(--ss-space-lg);
+      display: flex;
+      gap: var(--ss-space-md);
+    }
+
+    .nav-link {
+      padding: var(--ss-space-md) var(--ss-space-sm);
+      text-decoration: none;
+      color: var(--ss-neutral-700);
+      font-size: var(--ss-font-size-sm);
+      font-weight: 500;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .nav-link:hover {
+      color: var(--ss-primary-600);
+    }
+
+    .nav-link.active {
+      color: var(--ss-primary-600);
+      border-bottom-color: var(--ss-primary-600);
+    }
+
+    /* Main Content */
+    .portal-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: var(--ss-space-xl) var(--ss-space-lg);
+    }
+
+    .page-header {
+      margin-bottom: var(--ss-space-xl);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: var(--ss-space-md);
+    }
+
+    .page-header h2 {
+      color: var(--ss-neutral-900);
+      font-size: var(--ss-font-size-2xl);
+    }
+
+    .page-header p {
+      color: var(--ss-neutral-600);
+      font-size: var(--ss-font-size-sm);
+      width: 100%;
+    }
+
+    /* Stats Cards */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: var(--ss-space-md);
+      margin-bottom: var(--ss-space-xl);
+    }
+
+    .stat-card {
+      background: white;
+      padding: var(--ss-space-lg);
+      border-radius: var(--ss-radius-none);
+      box-shadow: var(--ss-shadow-sm);
+    }
+
+    .stat-card h4 {
+      color: var(--ss-neutral-600);
+      font-size: var(--ss-font-size-xs);
+      font-weight: 600;
+      margin-bottom: var(--ss-space-sm);
+      text-transform: uppercase;
+    }
+
+    .stat-value {
+      color: var(--ss-neutral-900);
+      font-size: var(--ss-font-size-xl);
+      font-weight: 700;
+    }
+
+    /* Filters */
+    .filters-section {
+      background: white;
+      padding: var(--ss-space-md);
+      border-radius: var(--ss-radius-none);
+      box-shadow: var(--ss-shadow-sm);
+      margin-bottom: var(--ss-space-lg);
+      display: flex;
+      gap: var(--ss-space-md);
+      flex-wrap: wrap;
+    }
+
+    .filter-group {
+      flex: 1;
+      min-width: 150px;
+    }
+
+    .filter-group label {
+      display: block;
+      font-size: var(--ss-font-size-xs);
+      font-weight: 600;
+      color: var(--ss-neutral-700);
+      margin-bottom: var(--ss-space-xs);
+      text-transform: uppercase;
+    }
+
+    .filter-group select {
+      width: 100%;
+      padding: var(--ss-space-sm);
+      border: 1px solid var(--ss-neutral-300);
+      border-radius: var(--ss-radius-none);
+      font-size: var(--ss-font-size-sm);
+      font-family: var(--ss-font-family);
+    }
+
+    /* Request List */
+    .request-list {
+      background: white;
+      border-radius: var(--ss-radius-none);
+      box-shadow: var(--ss-shadow-sm);
+      overflow: hidden;
+    }
+
+    .request-item {
+      border-bottom: 1px solid var(--ss-neutral-200);
+      padding: var(--ss-space-md);
+      transition: background 0.2s;
+    }
+
+    .request-item:last-child {
+      border-bottom: none;
+    }
+
+    .request-item:hover {
+      background: var(--ss-neutral-50);
+    }
+
+    .request-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--ss-space-sm);
+      cursor: pointer;
+    }
+
+    .request-info {
+      flex: 1;
+    }
+
+    .request-service-type {
+      font-weight: 600;
+      color: var(--ss-neutral-900);
+      font-size: var(--ss-font-size-sm);
+    }
+
+    .request-date {
+      font-size: var(--ss-font-size-xs);
+      color: var(--ss-neutral-600);
+      margin-top: var(--ss-space-xs);
+    }
+
+    .request-badges {
+      display: flex;
+      gap: var(--ss-space-sm);
+      align-items: center;
+    }
+
+    .badge {
+      padding: var(--ss-space-xs) var(--ss-space-sm);
+      border-radius: var(--ss-radius-none);
+      font-size: var(--ss-font-size-xs);
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .status-pending {
+      background: var(--ss-warning-100);
+      color: var(--ss-warning-700);
+    }
+
+    .status-scheduled {
+      background: var(--ss-info-100);
+      color: var(--ss-info-700);
+    }
+
+    .status-completed {
+      background: var(--ss-success-100);
+      color: var(--ss-success-700);
+    }
+
+    .status-cancelled {
+      background: var(--ss-neutral-200);
+      color: var(--ss-neutral-600);
+    }
+
+    .priority-low {
+      background: var(--ss-neutral-100);
+      color: var(--ss-neutral-600);
+    }
+
+    .priority-normal {
+      background: var(--ss-info-100);
+      color: var(--ss-info-700);
+    }
+
+    .priority-high {
+      background: var(--ss-warning-100);
+      color: var(--ss-warning-700);
+    }
+
+    .priority-urgent {
+      background: var(--ss-error-100);
+      color: var(--ss-error-700);
+    }
+
+    .request-details {
+      display: none;
+      margin-top: var(--ss-space-md);
+      padding-top: var(--ss-space-md);
+      border-top: 1px solid var(--ss-neutral-200);
+    }
+
+    .request-details.expanded {
+      display: block;
+    }
+
+    .detail-row {
+      margin-bottom: var(--ss-space-sm);
+      font-size: var(--ss-font-size-sm);
+    }
+
+    .detail-row strong {
+      color: var(--ss-neutral-900);
+    }
+
+    .detail-row span {
+      color: var(--ss-neutral-700);
+    }
+
+    .admin-response {
+      background: var(--ss-info-50);
+      padding: var(--ss-space-sm);
+      border-radius: var(--ss-radius-none);
+      margin-top: var(--ss-space-sm);
+      border-left: 3px solid var(--ss-info-600);
+    }
+
+    .admin-response strong {
+      color: var(--ss-info-700);
+      display: block;
+      margin-bottom: var(--ss-space-xs);
+      font-size: var(--ss-font-size-xs);
+      text-transform: uppercase;
+    }
+
+    .attachment-preview {
+      margin-top: var(--ss-space-sm);
+    }
+
+    .attachment-preview img {
+      max-width: 200px;
+      max-height: 200px;
+      border-radius: var(--ss-radius-none);
+      cursor: pointer;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: var(--ss-space-xl);
+      color: var(--ss-neutral-600);
+    }
+
+    .loader {
+      text-align: center;
+      padding: var(--ss-space-xl);
+      color: var(--ss-neutral-600);
+    }
+
+    .expand-icon {
+      transition: transform 0.2s;
+      font-size: var(--ss-font-size-sm);
+      color: var(--ss-neutral-500);
+    }
+
+    .expand-icon.expanded {
+      transform: rotate(180deg);
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      .portal-nav {
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+
+      .portal-content {
+        padding: var(--ss-space-lg) var(--ss-space-md);
+      }
+
+      .request-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--ss-space-sm);
+      }
+
+      .request-badges {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Portal Header -->
+  <header class="portal-header">
+    <div class="header-left">
+      <h1>⚓ Sailor Skills</h1>
+    </div>
+    <div class="header-right">
+      <span class="user-email" id="user-email">Loading...</span>
+      <button class="btn btn-secondary" id="logout-btn">Sign Out</button>
+    </div>
+  </header>
+
+  <!-- Portal Navigation -->
+  <nav class="portal-nav">
+    <a href="/portal.html" class="nav-link">Dashboard</a>
+    <a href="/portal-services.html" class="nav-link">Service History</a>
+    <a href="/portal-invoices.html" class="nav-link">Invoices</a>
+    <a href="/portal-messages.html" class="nav-link">Messages</a>
+    <a href="/portal-request-service.html" class="nav-link">Request Service</a>
+    <a href="/portal-request-history.html" class="nav-link active">Request History</a>
+    <a href="/portal-account.html" class="nav-link">Account</a>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="portal-content">
+    <div class="page-header">
+      <div>
+        <h2>Service Request History</h2>
+        <p>View and track your service requests</p>
+      </div>
+      <button class="btn btn-primary" onclick="window.location.href='/portal-request-service.html'">
+        New Request
+      </button>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="stats-row" id="stats-row">
+      <div class="stat-card">
+        <h4>Total Requests</h4>
+        <p class="stat-value">-</p>
+      </div>
+      <div class="stat-card">
+        <h4>Pending</h4>
+        <p class="stat-value">-</p>
+      </div>
+      <div class="stat-card">
+        <h4>Scheduled</h4>
+        <p class="stat-value">-</p>
+      </div>
+      <div class="stat-card">
+        <h4>Completed</h4>
+        <p class="stat-value">-</p>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-section">
+      <div class="filter-group">
+        <label for="status-filter">Status</label>
+        <select id="status-filter">
+          <option value="">All Statuses</option>
+          <option value="pending">Pending</option>
+          <option value="scheduled">Scheduled</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Request List -->
+    <div class="request-list" id="request-list">
+      <div class="loader">Loading requests...</div>
+    </div>
+  </main>
+
+  <script type="module" src="/src/views/request-history.js"></script>
+</body>
+</html>

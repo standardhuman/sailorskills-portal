@@ -126,6 +126,9 @@ Required in Vercel project settings and local `.env`:
 ```env
 VITE_SUPABASE_URL=https://fzygakldvvzxmahkdylq.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key-here
+
+# Optional: For database testing and automation (see Database Testing section)
+DATABASE_URL=postgresql://postgres.[PROJECT_REF]:[PASSWORD]@aws-0-region.pooler.supabase.com:5432/postgres
 ```
 
 ## Database Access
@@ -178,6 +181,49 @@ This repo uses Playwright MCP for end-to-end testing.
 4. Verify customer data isolation
 5. Test service request submission
 6. Verify Supabase queries
+
+### Database Testing & Automation
+
+**Execute SQL queries directly from Claude Code for testing and automation!**
+
+We have two approaches for running SQL queries against Supabase:
+
+#### Option 1: psql (Quick Testing)
+Use PostgreSQL command-line client for fast, direct queries:
+
+```bash
+# One-time query
+psql "$DATABASE_URL" -c "SELECT * FROM customers LIMIT 5"
+
+# Interactive session
+psql "$DATABASE_URL"
+```
+
+#### Option 2: Node.js Scripts (Automated Testing)
+Use the `db-query.mjs` utility for programmatic access:
+
+```javascript
+import { query, queryOne, queryAll, queryValue } from './scripts/test-helpers/db-query.mjs';
+
+// Get customer data
+const customer = await queryOne('SELECT * FROM customers WHERE email = $1', ['test@example.com']);
+
+// Count boats
+const boatCount = await queryValue('SELECT COUNT(*) FROM boats WHERE customer_id = $1', [customer.id]);
+```
+
+**Setup Required:**
+1. Get database connection string from Supabase Dashboard → Project Settings → Database
+2. Add to `.env`: `DATABASE_URL=postgresql://postgres.[PROJECT_REF]:[PASSWORD]@...`
+3. Test connection: `node scripts/test-helpers/db-query.mjs`
+
+**Example Scripts:**
+- `example-verify-customer.mjs` - Verify customer data
+- `example-check-schema.mjs` - Validate database schema
+- `example-quick-query.mjs` - Run any SQL query
+- `example-playwright-integration.mjs` - Use in Playwright tests
+
+**Full documentation:** See `scripts/test-helpers/README.md`
 
 ## Common Tasks
 

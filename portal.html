@@ -228,6 +228,175 @@
       padding: var(--ss-space-xl);
       color: var(--ss-neutral-600);
     }
+
+    /* Paint Condition Section */
+    .paint-condition-section {
+      background: white;
+      padding: var(--ss-space-xl);
+      border-radius: var(--ss-radius-none);
+      box-shadow: var(--ss-shadow-md);
+      margin-bottom: var(--ss-space-xl);
+    }
+
+    .paint-condition-section h3 {
+      color: var(--ss-neutral-900);
+      font-size: var(--ss-font-size-lg);
+      margin-bottom: var(--ss-space-md);
+      font-weight: 600;
+    }
+
+    .paint-condition-display {
+      margin-top: var(--ss-space-lg);
+    }
+
+    /* Rainbow Gradient Bar */
+    .gradient-bar {
+      height: 40px;
+      border-radius: 8px;
+      position: relative;
+      background: linear-gradient(to right,
+        #b0b0b0 0%,      /* Not Inspected - gray */
+        #00b894 12.5%,   /* Excellent - green */
+        #4caf50 25%,     /* Exc-Good */
+        #8bc34a 37.5%,   /* Good - lime */
+        #ffc107 50%,     /* Good-Fair - yellow */
+        #ff9800 62.5%,   /* Fair - orange */
+        #ff5722 75%,     /* Fair-Poor - deep orange */
+        #d63031 87.5%,   /* Poor - red */
+        #8b0000 100%     /* Very Poor - dark red */
+      );
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      margin-bottom: var(--ss-space-md);
+    }
+
+    .condition-marker {
+      position: absolute;
+      top: -8px;
+      transform: translateX(-50%);
+      width: 56px;
+      height: 56px;
+      background: white;
+      border: 4px solid var(--ss-primary-600);
+      border-radius: 50%;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      transition: all 0.3s ease;
+    }
+
+    .condition-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: var(--ss-font-size-xs);
+      color: var(--ss-neutral-600);
+      margin-top: var(--ss-space-xs);
+    }
+
+    .condition-labels span {
+      flex: 1;
+      text-align: center;
+      font-weight: 500;
+    }
+
+    .paint-status-message {
+      margin-top: var(--ss-space-lg);
+      padding: var(--ss-space-md);
+      border-radius: var(--ss-radius-none);
+      font-size: var(--ss-font-size-sm);
+      font-weight: 500;
+    }
+
+    .paint-status-message.good {
+      background: rgba(0, 184, 148, 0.1);
+      color: #00b894;
+      border-left: 4px solid #00b894;
+    }
+
+    .paint-status-message.due-soon {
+      background: rgba(255, 193, 7, 0.1);
+      color: #f59e0b;
+      border-left: 4px solid #ffc107;
+    }
+
+    .paint-status-message.past-due {
+      background: rgba(214, 48, 49, 0.1);
+      color: #d63031;
+      border-left: 4px solid #d63031;
+    }
+
+    .service-date-info {
+      font-size: var(--ss-font-size-xs);
+      color: var(--ss-neutral-500);
+      margin-top: var(--ss-space-xs);
+    }
+
+    /* Videos Section */
+    .videos-section {
+      background: white;
+      padding: var(--ss-space-xl);
+      border-radius: var(--ss-radius-none);
+      box-shadow: var(--ss-shadow-md);
+      margin-bottom: var(--ss-space-xl);
+    }
+
+    .videos-section h3 {
+      color: var(--ss-neutral-900);
+      font-size: var(--ss-font-size-lg);
+      margin-bottom: var(--ss-space-md);
+      font-weight: 600;
+    }
+
+    .video-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: var(--ss-space-md);
+      margin-top: var(--ss-space-lg);
+    }
+
+    .video-thumbnail {
+      position: relative;
+      border-radius: var(--ss-radius-none);
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.2s;
+      box-shadow: var(--ss-shadow-sm);
+    }
+
+    .video-thumbnail:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--ss-shadow-md);
+    }
+
+    .video-thumbnail img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .video-play-overlay {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 60px;
+      height: 60px;
+      background: rgba(0, 0, 0, 0.7);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 24px;
+    }
+
+    .no-videos-message {
+      text-align: center;
+      padding: var(--ss-space-xl);
+      color: var(--ss-neutral-500);
+      font-size: var(--ss-font-size-sm);
+    }
   </style>
 </head>
 <body>
@@ -267,6 +436,35 @@
       </select>
     </div>
 
+    <!-- Paint Condition Section -->
+    <div class="paint-condition-section" id="paint-condition-section" style="display: none;">
+      <h3>🎨 Paint Condition</h3>
+      <div class="paint-condition-display">
+        <div class="gradient-bar">
+          <div class="condition-marker" id="condition-marker">⚓</div>
+        </div>
+        <div class="condition-labels">
+          <span>Not Inspected</span>
+          <span>Excellent</span>
+          <span>Good</span>
+          <span>Fair</span>
+          <span>Poor</span>
+        </div>
+        <div class="paint-status-message" id="paint-status-message">
+          Loading paint condition...
+        </div>
+        <div class="service-date-info" id="service-date-info"></div>
+      </div>
+    </div>
+
+    <!-- Videos Section -->
+    <div class="videos-section" id="videos-section" style="display: none;">
+      <h3>📹 Latest Service Videos</h3>
+      <div class="video-grid" id="video-grid">
+        <div class="no-videos-message">Loading videos...</div>
+      </div>
+    </div>
+
     <!-- Stats Row -->
     <div class="stats-row">
       <div class="stat-card">
@@ -279,7 +477,7 @@
       </div>
       <div class="stat-card">
         <h4>Current Condition</h4>
-        <p class="stat-value">Good</p>
+        <p class="stat-value" id="condition-stat">Good</p>
       </div>
     </div>
 

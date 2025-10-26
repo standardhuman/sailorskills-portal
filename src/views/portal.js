@@ -4,6 +4,7 @@
  */
 
 import { requireAuth, getCurrentUser, getUserBoats, logout } from '../auth/auth.js';
+import { getPaintCondition, getPaintStatus, daysSinceService, getServiceMedia } from '../api/boat-data.js';
 
 // Require authentication
 const isAuth = await requireAuth();
@@ -119,8 +120,123 @@ async function loadBoatData() {
   // Update welcome message with boat name
   document.getElementById('welcome-heading').textContent = `Welcome to ${boat.name}'s Portal`;
 
-  // TODO: Load service history, invoices, messages, etc.
-  // This will be implemented in future phases
+  // Load paint condition data
+  await loadPaintCondition(boat.id);
+
+  // Load service media/videos
+  await loadServiceMedia(boat.id);
+}
+
+/**
+ * Load and display paint condition
+ * @param {string} boatId - Boat UUID
+ */
+async function loadPaintCondition(boatId) {
+  const { paintData, error } = await getPaintCondition(boatId);
+
+  if (error || !paintData) {
+    console.error('Error loading paint condition:', error);
+    return;
+  }
+
+  // Show the paint condition section
+  const section = document.getElementById('paint-condition-section');
+  section.style.display = 'block';
+
+  // Map paint condition to position percentage on gradient
+  const conditionMap = {
+    'not-inspected': 0,
+    'excellent': 12.5,
+    'exc-good': 18.75,
+    'good': 37.5,
+    'good-fair': 50,
+    'fair': 62.5,
+    'fair-poor': 75,
+    'poor': 87.5,
+    'very-poor': 100
+  };
+
+  const position = conditionMap[paintData.overall] || 0;
+
+  // Position the marker on the gradient
+  const marker = document.getElementById('condition-marker');
+  marker.style.left = `${position}%`;
+
+  // Get paint status
+  const days = daysSinceService(paintData.serviceDate);
+  const status = getPaintStatus(paintData.overall, days);
+
+  // Update status message
+  const messageEl = document.getElementById('paint-status-message');
+  messageEl.textContent = status.message;
+  messageEl.className = `paint-status-message ${status.status}`;
+
+  // Update service date info
+  const dateInfo = document.getElementById('service-date-info');
+  if (paintData.serviceDate && days !== null) {
+    dateInfo.textContent = `Last inspected ${days} day${days !== 1 ? 's' : ''} ago (${formatDate(paintData.serviceDate)})`;
+  }
+
+  // Update condition stat
+  const conditionStat = document.getElementById('condition-stat');
+  conditionStat.textContent = formatConditionText(paintData.overall);
+}
+
+/**
+ * Load and display service media/videos
+ * @param {string} boatId - Boat UUID
+ */
+async function loadServiceMedia(boatId) {
+  const { media, error } = await getServiceMedia(boatId);
+
+  if (error) {
+    console.error('Error loading service media:', error);
+  }
+
+  // Show videos section
+  const section = document.getElementById('videos-section');
+  const grid = document.getElementById('video-grid');
+
+  // TODO: For now, show a placeholder since videos aren't implemented yet
+  // Once we have YouTube playlist integration, we'll populate this
+  if (!media || media.length === 0) {
+    grid.innerHTML = '<div class="no-videos-message">No videos available yet. Videos from your latest service will appear here.</div>';
+    section.style.display = 'block';
+  }
+}
+
+/**
+ * Format paint condition text for display
+ * @param {string} condition - Paint condition value
+ * @returns {string} Formatted text
+ */
+function formatConditionText(condition) {
+  const textMap = {
+    'not-inspected': 'Not Inspected',
+    'excellent': 'Excellent',
+    'exc-good': 'Exc-Good',
+    'good': 'Good',
+    'good-fair': 'Good-Fair',
+    'fair': 'Fair',
+    'fair-poor': 'Fair-Poor',
+    'poor': 'Poor',
+    'very-poor': 'Very Poor'
+  };
+  return textMap[condition] || 'Unknown';
+}
+
+/**
+ * Format date for display
+ * @param {string} dateString - ISO date string
+ * @returns {string} Formatted date
+ */
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  });
 }
 
 /**

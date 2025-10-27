@@ -18,8 +18,8 @@ const REQUIRED_SCHEMA = {
   boats: ['id', 'customer_id', 'name', 'model', 'length'],
   service_logs: ['id', 'boat_id', 'service_date', 'technician'],
   invoices: ['id', 'customer_id', 'total', 'status'],
-  service_requests: ['id', 'customer_id', 'status', 'created_at'],
-  messages: ['id', 'customer_id', 'content', 'created_at']
+  service_requests: ['id', 'customer_account_id', 'status', 'created_at'], // Fixed: customer_account_id
+  customer_messages: ['id', 'customer_account_id', 'message_text', 'created_at'] // Fixed: table name & column
 };
 
 async function checkSchema() {

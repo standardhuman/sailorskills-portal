@@ -22,7 +22,8 @@ export default defineConfig({
         portalInvoices: resolve(__dirname, 'portal-invoices.html'),
         portalAccount: resolve(__dirname, 'portal-account.html'),
         portalRequestService: resolve(__dirname, 'portal-request-service.html'),
-        portalRequestHistory: resolve(__dirname, 'portal-request-history.html')
+        portalRequestHistory: resolve(__dirname, 'portal-request-history.html'),
+        billing: resolve(__dirname, 'billing.html')
       }
     }
   }

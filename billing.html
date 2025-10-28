@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Billing - Sailor Skills</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="/shared/src/ui/design-tokens.css">
+    <link rel="stylesheet" href="/shared/src/ui/styles.css">
+    <link rel="stylesheet" href="/shared/src/ui/components/status-badge.css">
+
+    <style>
+        .billing-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .page-header {
+            margin-bottom: 30px;
+        }
+
+        .summary-panel {
+            background: linear-gradient(135deg, #345475 0%, #2a3f5f 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .summary-item h3 {
+            font-size: 0.875rem;
+            opacity: 0.9;
+            margin: 0 0 5px 0;
+        }
+
+        .summary-item .value {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .section-header {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+
+        .invoices-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 40px;
+        }
+
+        .invoice-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .invoice-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .invoice-number {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #345475;
+        }
+
+        .invoice-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-label {
+            font-size: 0.75rem;
+            color: #6c757d;
+            text-transform: uppercase;
+            margin-bottom: 3px;
+        }
+
+        .detail-value {
+            font-size: 1rem;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+
+        .invoice-actions {
+            display: flex;
+            gap: 10px;
+            padding-top: 15px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 0.875rem;
+        }
+
+        .btn-primary {
+            background: #345475;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2a3f5f;
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #495057;
+            border: 1px solid #ced4da;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e6ea;
+        }
+
+        .line-items-section {
+            display: none;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .line-items-section.expanded {
+            display: block;
+        }
+
+        .line-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 0.875rem;
+        }
+
+        .line-item-desc {
+            flex: 1;
+        }
+
+        .line-item-type {
+            color: #6c757d;
+            margin-left: 10px;
+        }
+
+        .line-item-amount {
+            font-weight: 500;
+            margin-left: 20px;
+        }
+
+        .payment-history-section {
+            margin-top: 40px;
+        }
+
+        .payment-table {
+            width: 100%;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .payment-table th {
+            background: #f8f9fa;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: #495057;
+        }
+
+        .payment-table td {
+            padding: 12px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="nav-container"></div>
+
+    <main class="billing-container">
+        <div class="page-header">
+            <h1>My Billing</h1>
+        </div>
+
+        <div id="errorMessage" class="error" style="display: none;"></div>
+
+        <!-- Summary Panel -->
+        <div class="summary-panel">
+            <h2 style="margin: 0 0 10px 0;">Account Summary</h2>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <h3>Current Balance</h3>
+                    <div class="value" id="currentBalance">$0.00</div>
+                </div>
+                <div class="summary-item">
+                    <h3>Last Payment</h3>
+                    <div class="value" id="lastPaymentAmount">$0.00</div>
+                    <div style="font-size: 0.875rem; opacity: 0.9; margin-top: 5px;" id="lastPaymentDate">N/A</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="loadingIndicator" class="loading">
+            Loading your billing information...
+        </div>
+
+        <!-- Invoices Section -->
+        <div id="invoicesSection" style="display: none;">
+            <h2 class="section-header">Invoices</h2>
+            <div class="invoices-list" id="invoicesList">
+                <!-- Invoice cards populated by JS -->
+            </div>
+        </div>
+
+        <!-- Payment History Section -->
+        <div id="paymentHistorySection" style="display: none;">
+            <h2 class="section-header">Payment History</h2>
+            <table class="payment-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Method</th>
+                        <th>Amount</th>
+                        <th>Invoice</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="paymentHistoryBody">
+                    <!-- Payments populated by JS -->
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script type="module">
+        import { initNavigation } from '/shared/src/ui/navigation.js';
+        initNavigation({
+            currentPage: 'portal',
+            breadcrumbs: [
+                { label: 'Home', url: 'https://www.sailorskills.com/' },
+                { label: 'My Account', url: 'https://sailorskills-portal.vercel.app' },
+                { label: 'Billing' }
+            ]
+        });
+    </script>
+
+    <script type="module" src="/src/auth/init-supabase-auth.js"></script>
+    <script type="module" src="/src/billing/billing.js"></script>
+</body>
+</html>

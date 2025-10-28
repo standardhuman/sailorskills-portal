@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
+import { cpSync } from 'fs';
 
 export default defineConfig({
   server: {
@@ -26,5 +27,23 @@ export default defineConfig({
         billing: resolve(__dirname, 'billing.html')
       }
     }
-  }
+  },
+  plugins: [
+    {
+      name: 'copy-shared-to-dist',
+      closeBundle() {
+        // Copy shared folder to dist for ES module imports
+        try {
+          cpSync(
+            resolve(__dirname, 'shared'),
+            resolve(__dirname, 'dist/shared'),
+            { recursive: true }
+          );
+          console.log('✅ Copied shared/ folder to dist/shared/');
+        } catch (err) {
+          console.error('Error copying shared:', err);
+        }
+      }
+    }
+  ]
 });

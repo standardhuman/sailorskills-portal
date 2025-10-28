@@ -23,6 +23,7 @@ if (!isAuth) {
 // State
 let currentUser = null;
 let currentBoatId = null;
+let currentCustomerId = null;
 let allInvoices = [];
 let filteredInvoices = [];
 
@@ -57,6 +58,7 @@ async function init() {
   const savedBoatId = localStorage.getItem('currentBoatId');
   const boat = boats.find(b => b.id === savedBoatId) || boats[0];
   currentBoatId = boat.id;
+  currentCustomerId = boat.customer_id;
 
   // Load data
   await loadData();
@@ -80,7 +82,7 @@ async function loadData() {
  * Load invoice statistics
  */
 async function loadStats() {
-  const { stats, error } = await getInvoiceStats(currentBoatId);
+  const { stats, error } = await getInvoiceStats(currentBoatId, currentCustomerId);
 
   if (error) {
     console.error('Error loading stats:', error);
@@ -111,7 +113,7 @@ async function loadStats() {
  * Load invoice list
  */
 async function loadInvoiceList() {
-  const { invoices, error } = await loadInvoices(currentBoatId);
+  const { invoices, error } = await loadInvoices(currentBoatId, currentCustomerId);
 
   if (error) {
     console.error('Error loading invoices:', error);

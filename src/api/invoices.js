@@ -9,16 +9,18 @@ const supabase = createSupabaseClient();
 
 /**
  * Load invoices for a boat
- * @param {string} boatId - Boat ID
+ * @param {string} boatId - Boat ID (optional, kept for backward compatibility)
+ * @param {string} customerId - Customer ID
  * @param {object} filters - Optional filters (status, dateRange)
  * @returns {Promise<{invoices, error}>}
  */
-export async function loadInvoices(boatId, filters = {}) {
+export async function loadInvoices(boatId, customerId, filters = {}) {
   try {
+    // Query by customer_id to get all invoices (both boat-specific and customer-level)
     let query = supabase
       .from('invoices')
       .select(`*`)
-      .eq('boat_id', boatId)
+      .eq('customer_id', customerId)
       .order('issued_at', { ascending: false });
 
     // Apply filters
@@ -72,15 +74,16 @@ export async function getInvoice(invoiceId) {
 
 /**
  * Get invoice statistics for a boat
- * @param {string} boatId - Boat ID
+ * @param {string} boatId - Boat ID (optional, kept for backward compatibility)
+ * @param {string} customerId - Customer ID
  * @returns {Promise<{stats, error}>}
  */
-export async function getInvoiceStats(boatId) {
+export async function getInvoiceStats(boatId, customerId) {
   try {
     const { data: invoices, error } = await supabase
       .from('invoices')
       .select('amount, status')
-      .eq('boat_id', boatId);
+      .eq('customer_id', customerId);
 
     if (error) throw error;
 
@@ -103,16 +106,17 @@ export async function getInvoiceStats(boatId) {
 
 /**
  * Get recent invoices for a boat
- * @param {string} boatId - Boat ID
+ * @param {string} boatId - Boat ID (optional, kept for backward compatibility)
+ * @param {string} customerId - Customer ID
  * @param {number} limit - Number of invoices to return
  * @returns {Promise<{invoices, error}>}
  */
-export async function getRecentInvoices(boatId, limit = 3) {
+export async function getRecentInvoices(boatId, customerId, limit = 3) {
   try {
     const { data, error } = await supabase
       .from('invoices')
       .select('*')
-      .eq('boat_id', boatId)
+      .eq('customer_id', customerId)
       .order('issued_at', { ascending: false })
       .limit(limit);
 

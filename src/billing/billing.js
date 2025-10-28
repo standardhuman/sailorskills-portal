@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
-import { formatCurrency, formatInvoiceDate, formatPaymentMethod } from '../../../sailorskills-shared/src/utils/invoice-formatters.js';
-import { createStatusBadge } from '../../../sailorskills-shared/src/ui/components/status-badge.js';
+import { formatCurrency, formatInvoiceDate, formatPaymentMethod } from '../../shared/src/utils/invoice-formatters.js';
+import { createStatusBadge } from '../../shared/src/ui/components.js';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;

@@ -137,17 +137,14 @@ function renderInvoices() {
   }
 
   container.innerHTML = filteredInvoices.map(invoice => {
-    const lineItems = invoice.line_items || [];
-    const categoryTotals = calculateCategoryTotals(lineItems);
-
     return `
       <div class="invoice-item" data-invoice-id="${invoice.id}">
         <div class="invoice-header" onclick="toggleInvoiceDetails('${invoice.id}')">
           <div class="invoice-info">
             <div class="invoice-number">Invoice #${invoice.invoice_number}</div>
-            <div class="invoice-date">${formatDate(invoice.invoice_date)}</div>
+            <div class="invoice-date">${formatDate(invoice.issued_at)}</div>
           </div>
-          <div class="invoice-amount">${formatCurrency(invoice.amount_total)}</div>
+          <div class="invoice-amount">${formatCurrency(invoice.amount)}</div>
           <span class="invoice-status ${getStatusClass(invoice.status)}">
             ${getStatusText(invoice.status)}
           </span>
@@ -155,47 +152,23 @@ function renderInvoices() {
         </div>
 
         <div class="invoice-details" id="details-${invoice.id}">
-          ${lineItems.length > 0 ? `
-            <table class="line-items-table">
-              <thead>
-                <tr>
-                  <th>Description</th>
-                  <th>Category</th>
-                  <th>Qty</th>
-                  <th>Unit Price</th>
-                  <th>Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${lineItems.map(item => `
-                  <tr>
-                    <td>${item.description}</td>
-                    <td>${item.category ? item.category.charAt(0).toUpperCase() + item.category.slice(1) : 'Other'}</td>
-                    <td>${item.quantity}</td>
-                    <td>${formatCurrency(item.unit_price)}</td>
-                    <td class="item-amount">${formatCurrency(item.amount)}</td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-
+          ${invoice.service_details ? `
             <div style="margin-bottom: var(--ss-space-md);">
-              <strong>Breakdown by Category:</strong><br>
-              ${Object.entries(categoryTotals).map(([category, amount]) =>
-                amount > 0 ? `${category.charAt(0).toUpperCase() + category.slice(1)}: ${formatCurrency(amount)}<br>` : ''
-              ).join('')}
+              <strong>Service Details:</strong><br>
+              ${invoice.service_details.description || 'No description available'}
             </div>
-          ` : '<p>No line items available.</p>'}
+          ` : '<p>No service details available.</p>'}
 
-          ${invoice.payment_date ? `
+          ${invoice.paid_at ? `
             <div class="payment-info">
               <strong>Payment Details:</strong><br>
-              Paid on ${formatDate(invoice.payment_date)}
-              ${invoice.payment_method_id ? ` via ${invoice.payment_method_id}` : ''}
+              Paid on ${formatDate(invoice.paid_at)}
+              ${invoice.payment_method ? ` via ${invoice.payment_method.charAt(0).toUpperCase() + invoice.payment_method.slice(1)}` : ''}
+              ${invoice.payment_reference ? ` (Ref: ${invoice.payment_reference})` : ''}
             </div>
-          ` : invoice.status === 'sent' || invoice.status === 'overdue' ? `
+          ` : invoice.status === 'pending' || invoice.status === 'overdue' ? `
             <div class="payment-info">
-              <strong>Due Date:</strong> ${invoice.due_date ? formatDate(invoice.due_date) : 'Upon receipt'}
+              <strong>Due Date:</strong> ${invoice.due_at ? formatDate(invoice.due_at) : 'Upon receipt'}
             </div>
           ` : ''}
 
@@ -245,7 +218,7 @@ function applyFilters() {
       const days = parseInt(dateRange);
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - days);
-      const invoiceDate = new Date(invoice.invoice_date);
+      const invoiceDate = new Date(invoice.issued_at);
       if (invoiceDate < cutoffDate) {
         return false;
       }

@@ -17,12 +17,9 @@ export async function loadInvoices(boatId, filters = {}) {
   try {
     let query = supabase
       .from('invoices')
-      .select(`
-        *,
-        line_items:invoice_line_items(*)
-      `)
+      .select(`*`)
       .eq('boat_id', boatId)
-      .order('invoice_date', { ascending: false });
+      .order('issued_at', { ascending: false });
 
     // Apply filters
     if (filters.status) {
@@ -30,11 +27,11 @@ export async function loadInvoices(boatId, filters = {}) {
     }
 
     if (filters.startDate) {
-      query = query.gte('invoice_date', filters.startDate);
+      query = query.gte('issued_at', filters.startDate);
     }
 
     if (filters.endDate) {
-      query = query.lte('invoice_date', filters.endDate);
+      query = query.lte('issued_at', filters.endDate);
     }
 
     const { data, error } = await query;
@@ -59,9 +56,7 @@ export async function getInvoice(invoiceId) {
       .from('invoices')
       .select(`
         *,
-        line_items:invoice_line_items(*),
-        boat:boats(name, slug),
-        customer:customers(name, email)
+        boat:boats(name, slug)
       `)
       .eq('id', invoiceId)
       .single();
@@ -84,7 +79,7 @@ export async function getInvoiceStats(boatId) {
   try {
     const { data: invoices, error } = await supabase
       .from('invoices')
-      .select('amount_total, amount_paid, status')
+      .select('amount, status')
       .eq('boat_id', boatId);
 
     if (error) throw error;
@@ -92,15 +87,11 @@ export async function getInvoiceStats(boatId) {
     const stats = {
       total: invoices.length,
       paid: invoices.filter(i => i.status === 'paid').length,
-      pending: invoices.filter(i => i.status === 'sent').length,
+      pending: invoices.filter(i => i.status === 'pending').length,
       overdue: invoices.filter(i => i.status === 'overdue').length,
-      totalAmount: invoices.reduce((sum, i) => sum + parseFloat(i.amount_total || 0), 0),
-      paidAmount: invoices.reduce((sum, i) => sum + parseFloat(i.amount_paid || 0), 0),
-      outstandingAmount: invoices.reduce((sum, i) => {
-        const total = parseFloat(i.amount_total || 0);
-        const paid = parseFloat(i.amount_paid || 0);
-        return sum + (total - paid);
-      }, 0)
+      totalAmount: invoices.reduce((sum, i) => sum + parseFloat(i.amount || 0), 0),
+      paidAmount: invoices.filter(i => i.status === 'paid').reduce((sum, i) => sum + parseFloat(i.amount || 0), 0),
+      outstandingAmount: invoices.filter(i => i.status !== 'paid').reduce((sum, i) => sum + parseFloat(i.amount || 0), 0)
     };
 
     return { stats, error: null };
@@ -122,7 +113,7 @@ export async function getRecentInvoices(boatId, limit = 3) {
       .from('invoices')
       .select('*')
       .eq('boat_id', boatId)
-      .order('invoice_date', { ascending: false })
+      .order('issued_at', { ascending: false })
       .limit(limit);
 
     if (error) throw error;
@@ -167,8 +158,7 @@ export function formatDate(dateString) {
  */
 export function getStatusClass(status) {
   const statusClasses = {
-    'draft': 'status-draft',
-    'sent': 'status-pending',
+    'pending': 'status-pending',
     'paid': 'status-paid',
     'overdue': 'status-overdue',
     'cancelled': 'status-cancelled'
@@ -183,8 +173,7 @@ export function getStatusClass(status) {
  */
 export function getStatusText(status) {
   const statusText = {
-    'draft': 'Draft',
-    'sent': 'Pending',
+    'pending': 'Pending',
     'paid': 'Paid',
     'overdue': 'Overdue',
     'cancelled': 'Cancelled'

@@ -1,12 +1,22 @@
-# Sailorskills Customer Portal
+# Sailor Skills Customer Portal
 
-**Customer-facing portal for authenticated service access**
+**Tagline:** "Customer self-service portal"
 
-## Important Notes
+> **Common Sections**: See [SHARED_CLAUDE_SECTIONS.md](../SHARED_CLAUDE_SECTIONS.md) for:
+> - [Shared Package Setup](#shared-package-setup)
+> - [Development Workflow](#development-workflow)
+> - [Environment Variables](#environment-variables)
+> - [Deployment Process](#deployment)
+> - [Playwright Testing](#playwright-testing)
+> - [Troubleshooting](#troubleshooting)
 
-- Use login standardhuman@gmail.com and pw KLRss!650 for any authentication needs
-- Always test in Playwright MCP before pushing
-- Always push to git after successful tests
+---
+
+## Testing Credentials
+
+- **Location**: 1Password (search: "Sailor Skills Test Account")
+- **Usage**: For testing authentication flows only
+- **Never hardcode** credentials in files
 
 ## Product Overview
 

@@ -1,0 +1,19 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# Pre-commit hook for testing platform
+# Runs linting, type checking, and fast tests on staged files
+
+echo "🔍 Running pre-commit checks..."
+
+# Run lint-staged for file-specific checks
+npx lint-staged
+
+# Exit with lint-staged's exit code
+if [ $? -ne 0 ]; then
+  echo "❌ Pre-commit checks failed. Please fix the issues above."
+  exit 1
+fi
+
+echo "✅ Pre-commit checks passed!"
+exit 0

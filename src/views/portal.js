@@ -211,7 +211,9 @@ async function loadPaintCondition(boatId) {
     "very-poor": 100,
   };
 
-  const position = conditionMap[paintData.overall] || 0;
+  // Normalize condition to lowercase for lookup
+  const normalizedCondition = paintData.overall.toLowerCase();
+  const position = conditionMap[normalizedCondition] || 0;
 
   // Position the marker on the gradient
   const marker = document.getElementById("condition-marker");

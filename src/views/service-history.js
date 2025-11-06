@@ -389,33 +389,22 @@ function createTimelineItem(log, index, nextServiceDate = null) {
 }
 
 /**
- * Create conditions section
+ * Create conditions section - show detailed paint areas only
+ * (Overall conditions are shown as badges above)
  */
 function createConditionsSection(log) {
-  const hasConditions =
-    log.paint_condition_overall || log.growth_level || log.thru_hull_condition;
+  const hasDetailedConditions =
+    log.paint_detail_keel ||
+    log.paint_detail_waterline ||
+    log.paint_detail_boot_stripe ||
+    log.thru_hull_notes;
 
-  if (!hasConditions) return "";
+  if (!hasDetailedConditions) return "";
 
   return `
     <div class="detail-section">
-      <h4>Vessel Condition</h4>
+      <h4>Paint Details</h4>
       <div class="detail-grid">
-        ${
-          log.paint_condition_overall
-            ? `
-          <div class="detail-item">
-            <div class="detail-label">Paint Condition</div>
-            <div class="detail-value">
-              <span class="condition-badge ${getConditionClass(log.paint_condition_overall)}">
-                ${escapeHtml(log.paint_condition_overall)}
-              </span>
-            </div>
-          </div>
-        `
-            : ""
-        }
-
         ${
           log.paint_detail_keel
             ? `
@@ -448,35 +437,13 @@ function createConditionsSection(log) {
         `
             : ""
         }
-
-        ${
-          log.growth_level
-            ? `
-          <div class="detail-item">
-            <div class="detail-label">Growth Level</div>
-            <div class="detail-value">${escapeHtml(log.growth_level)}</div>
-          </div>
-        `
-            : ""
-        }
-
-        ${
-          log.thru_hull_condition
-            ? `
-          <div class="detail-item">
-            <div class="detail-label">Through-Hulls</div>
-            <div class="detail-value">${escapeHtml(log.thru_hull_condition)}</div>
-          </div>
-        `
-            : ""
-        }
       </div>
 
       ${
         log.thru_hull_notes
           ? `
         <div style="margin-top: var(--ss-space-sm); font-size: var(--ss-text-sm); color: var(--ss-text-medium); font-style: italic;">
-          ${escapeHtml(log.thru_hull_notes)}
+          <strong>Through-Hull Notes:</strong> ${escapeHtml(log.thru_hull_notes)}
         </div>
       `
           : ""

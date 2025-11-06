@@ -3,7 +3,7 @@
  * Fetch boat-specific data like service history, conditions, and videos
  */
 
-import { createSupabaseClient } from '../lib/supabase.js';
+import { createSupabaseClient } from "../lib/supabase.js";
 
 const supabase = createSupabaseClient();
 
@@ -15,22 +15,22 @@ const supabase = createSupabaseClient();
 export async function getLatestServiceLog(boatId) {
   try {
     const { data, error } = await supabase
-      .from('service_logs')
-      .select('*')
-      .eq('boat_id', boatId)
-      .order('service_date', { ascending: false })
+      .from("service_logs")
+      .select("*")
+      .eq("boat_id", boatId)
+      .order("service_date", { ascending: false })
       .limit(1)
       .maybeSingle(); // Use maybeSingle() to return null if no rows exist
 
     if (error) {
-      console.error('Error fetching latest service log:', error);
+      console.error("Error fetching latest service log:", error);
       return { serviceLog: null, error };
     }
 
     // data will be null if no service logs exist - this is OK
     return { serviceLog: data, error: null };
   } catch (err) {
-    console.error('Exception in getLatestServiceLog:', err);
+    console.error("Exception in getLatestServiceLog:", err);
     return { serviceLog: null, error: err };
   }
 }
@@ -50,7 +50,7 @@ export async function getPaintCondition(boatId) {
     }
 
     const paintData = {
-      overall: serviceLog.paint_condition_overall || 'not-inspected',
+      overall: serviceLog.paint_condition_overall || "not-inspected",
       keel: serviceLog.paint_detail_keel,
       waterline: serviceLog.paint_detail_waterline,
       bootStripe: serviceLog.paint_detail_boot_stripe,
@@ -60,7 +60,7 @@ export async function getPaintCondition(boatId) {
 
     return { paintData, error: null };
   } catch (err) {
-    console.error('Exception in getPaintCondition:', err);
+    console.error("Exception in getPaintCondition:", err);
     return { paintData: null, error: err };
   }
 }
@@ -73,21 +73,21 @@ export async function getPaintCondition(boatId) {
 export async function getBoatPlaylist(boatId) {
   try {
     const { data, error } = await supabase
-      .from('youtube_playlists')
-      .select('*')
-      .eq('boat_id', boatId)
-      .eq('is_public', true)
+      .from("youtube_playlists")
+      .select("*")
+      .eq("boat_id", boatId)
+      .eq("is_public", true)
       .maybeSingle(); // Use maybeSingle() to return null if no playlist exists
 
     if (error) {
-      console.error('Error fetching playlist:', error);
+      console.error("Error fetching playlist:", error);
       return { playlist: null, error };
     }
 
     // data will be null if no playlist exists - this is OK
     return { playlist: data, error: null };
   } catch (err) {
-    console.error('Exception in getBoatPlaylist:', err);
+    console.error("Exception in getBoatPlaylist:", err);
     return { playlist: null, error: err };
   }
 }
@@ -102,7 +102,7 @@ function extractPlaylistId(url) {
 
   // Handle different YouTube playlist URL formats
   const patterns = [
-    /[?&]list=([a-zA-Z0-9_-]+)/,  // ?list=... or &list=...
+    /[?&]list=([a-zA-Z0-9_-]+)/, // ?list=... or &list=...
     /playlist\/([a-zA-Z0-9_-]+)/, // /playlist/...
   ];
 
@@ -125,33 +125,41 @@ function extractPlaylistId(url) {
  * Fetch videos from YouTube playlist via Supabase Edge Function
  * @param {string} playlistId - YouTube playlist ID
  * @param {string} serviceDate - Optional service date to filter videos (ISO format)
+ * @param {number} maxResults - Maximum number of videos to fetch (default: 4)
  * @returns {Promise<{videos: Array, error: any}>}
  */
-export async function getPlaylistVideos(playlistId, serviceDate = null) {
+export async function getPlaylistVideos(
+  playlistId,
+  serviceDate = null,
+  maxResults = 4,
+) {
   try {
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
     const functionUrl = `${supabaseUrl}/functions/v1/get-playlist-videos`;
 
-    const params = new URLSearchParams({ playlistId });
+    const params = new URLSearchParams({
+      playlistId,
+      maxResults: maxResults.toString(),
+    });
     if (serviceDate) {
-      params.append('serviceDate', serviceDate);
+      params.append("serviceDate", serviceDate);
     }
 
     const response = await fetch(`${functionUrl}?${params.toString()}`, {
       headers: {
-        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
       },
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to fetch playlist videos');
+      throw new Error(errorData.error || "Failed to fetch playlist videos");
     }
 
     const data = await response.json();
     return { videos: data.videos || [], error: null };
   } catch (err) {
-    console.error('Exception in getPlaylistVideos:', err);
+    console.error("Exception in getPlaylistVideos:", err);
     return { videos: [], error: err };
   }
 }
@@ -163,10 +171,11 @@ export async function getPlaylistVideos(playlistId, serviceDate = null) {
  */
 export async function getServiceMedia(boatId) {
   try {
-    const { serviceLog, error: serviceError } = await getLatestServiceLog(boatId);
+    const { serviceLog, error: serviceError } =
+      await getLatestServiceLog(boatId);
 
     if (serviceError) {
-      console.error('Error loading service log:', serviceError);
+      console.error("Error loading service log:", serviceError);
       return { media: [], error: serviceError };
     }
 
@@ -177,7 +186,7 @@ export async function getServiceMedia(boatId) {
     const { playlist, error: playlistError } = await getBoatPlaylist(boatId);
 
     if (playlistError) {
-      console.warn('Error loading playlist (may not exist):', playlistError);
+      console.warn("Error loading playlist (may not exist):", playlistError);
       // Not a critical error - just return photos
       return { media: photos, error: null };
     }
@@ -188,18 +197,26 @@ export async function getServiceMedia(boatId) {
     }
 
     // Extract playlist ID from URL
-    const playlistId = playlist.playlist_id || extractPlaylistId(playlist.playlist_url);
+    const playlistId =
+      playlist.playlist_id || extractPlaylistId(playlist.playlist_url);
 
     if (!playlistId) {
-      console.warn('Could not extract playlist ID from URL:', playlist.playlist_url);
+      console.warn(
+        "Could not extract playlist ID from URL:",
+        playlist.playlist_url,
+      );
       return { media: photos, error: null };
     }
 
-    // Fetch videos from playlist (most recent videos, not filtered by service date)
-    const { videos, error: videosError } = await getPlaylistVideos(playlistId, null);
+    // Fetch videos from playlist (most recent 4 videos, not filtered by service date)
+    const { videos, error: videosError } = await getPlaylistVideos(
+      playlistId,
+      null,
+      4,
+    );
 
     if (videosError) {
-      console.error('Error fetching playlist videos:', videosError);
+      console.error("Error fetching playlist videos:", videosError);
       // Return photos even if videos fail
       return { media: photos, error: null };
     }
@@ -209,7 +226,7 @@ export async function getServiceMedia(boatId) {
 
     return { media, error: null };
   } catch (err) {
-    console.error('Exception in getServiceMedia:', err);
+    console.error("Exception in getServiceMedia:", err);
     return { media: [], error: err };
   }
 }
@@ -239,24 +256,26 @@ export function daysSinceService(serviceDate) {
 export function getPaintStatus(paintCondition, daysSince) {
   // Paint condition threshold: good-fair = time to consider repainting
   // fair-poor or worse = past due
-  const needsRepaint = ['fair-poor', 'poor', 'very-poor'].includes(paintCondition);
-  const shouldConsider = ['good-fair', 'fair'].includes(paintCondition);
+  const needsRepaint = ["fair-poor", "poor", "very-poor"].includes(
+    paintCondition,
+  );
+  const shouldConsider = ["good-fair", "fair"].includes(paintCondition);
 
-  let status = 'good';
-  let message = 'Paint condition is good';
+  let status = "good";
+  let message = "Paint condition is good";
   let isDue = false;
 
   if (needsRepaint) {
-    status = 'past-due';
-    message = 'Paint needs attention soon';
+    status = "past-due";
+    message = "Paint needs attention soon";
     isDue = true;
   } else if (shouldConsider) {
-    status = 'due-soon';
-    message = 'Consider repainting in the near future';
+    status = "due-soon";
+    message = "Consider repainting in the near future";
     isDue = false;
-  } else if (['excellent', 'exc-good', 'good'].includes(paintCondition)) {
-    status = 'good';
-    message = 'Paint condition is excellent';
+  } else if (["excellent", "exc-good", "good"].includes(paintCondition)) {
+    status = "good";
+    message = "Paint condition is excellent";
     isDue = false;
   }
 

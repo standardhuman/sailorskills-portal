@@ -394,15 +394,15 @@ async function loadLatestServiceDetails(boatId) {
 
   // Build unified service report HTML
   content.innerHTML = `
-    <div style="margin-bottom: var(--ss-space-lg);">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--ss-space-md);">
+    <div style="margin-bottom: 24px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid #e5e7eb;">
         <div>
-          <div style="font-size: var(--ss-text-lg); font-weight: 600; color: var(--ss-text-dark);">
+          <div style="font-size: 18px; font-weight: 600; color: var(--ss-text-dark);">
             ${formatDate(serviceLog.service_date)}
           </div>
-          ${serviceLog.service_name ? `<div style="color: var(--ss-text-medium); font-size: var(--ss-text-sm); margin-top: var(--ss-space-xs);">${escapeHtml(serviceLog.service_name)}</div>` : ""}
+          ${serviceLog.service_name ? `<div style="color: #6b7280; font-size: 14px; margin-top: 4px; font-weight: 400;">${escapeHtml(serviceLog.service_name)}</div>` : ""}
         </div>
-        <a href="/portal-services.html" style="color: var(--ss-primary); text-decoration: none; font-weight: 500; font-size: var(--ss-text-sm);">
+        <a href="/portal-services.html" style="color: var(--ss-primary); text-decoration: none; font-weight: 500; font-size: 14px;">
           View all history →
         </a>
       </div>
@@ -414,9 +414,9 @@ async function loadLatestServiceDetails(boatId) {
       ${
         serviceLog.notes
           ? `
-        <div style="margin-top: var(--ss-space-md); padding: var(--ss-space-md); background: var(--ss-bg-light); border-left: 3px solid var(--ss-primary);">
-          <h4 style="margin: 0 0 var(--ss-space-xs) 0; font-size: var(--ss-text-sm); font-weight: 600; color: var(--ss-text-dark);">Service Notes</h4>
-          <div style="color: var(--ss-text-dark); font-size: var(--ss-text-sm);">${escapeHtml(serviceLog.notes)}</div>
+        <div style="margin-top: 16px; padding: 12px; background: var(--ss-bg-light); border-left: 3px solid var(--ss-primary);">
+          <h4 style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: var(--ss-text-dark);">Service Notes</h4>
+          <div style="color: var(--ss-text-dark); font-size: 14px;">${escapeHtml(serviceLog.notes)}</div>
         </div>
       `
           : ""

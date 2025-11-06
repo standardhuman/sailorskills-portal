@@ -243,6 +243,10 @@ function displayServiceLogs(logs) {
 
 /**
  * Create timeline item HTML
+ * @param {Object} log - Service log
+ * @param {number} index - Item index
+ * @param {string|null} nextServiceDate - Next service date if available
+ * @returns {string} HTML string
  */
 function createTimelineItem(log, index, nextServiceDate = null) {
   const hasDetails =
@@ -250,42 +254,98 @@ function createTimelineItem(log, index, nextServiceDate = null) {
     log.growth_level ||
     log.thru_hull_condition ||
     (log.anode_conditions && log.anode_conditions.length > 0) ||
+    (log.propeller_conditions && log.propeller_conditions.length > 0) ||
     log.notes ||
-    (log.propellers && log.propellers.length > 0);
+    (log.service_videos && log.service_videos.length > 0);
 
-  // Check if we have videos for this service
-  const videosSection = createVideosSection(log, nextServiceDate);
-  const hasVideos = videosSection !== "";
-  const hasAnyDetails = hasDetails || hasVideos;
+  // Build condition badges array
+  const badges = [];
+
+  if (log.paint_condition_overall) {
+    badges.push({
+      label: `Paint: ${log.paint_condition_overall}`,
+      class: `condition-${log.paint_condition_overall.toLowerCase().replace(/\s+/g, "-")}`,
+    });
+  }
+
+  if (log.growth_level) {
+    badges.push({
+      label: `Growth: ${log.growth_level}`,
+      class: `condition-${log.growth_level.toLowerCase().replace(/\s+/g, "-")}`,
+    });
+  }
+
+  if (log.thru_hull_condition) {
+    badges.push({
+      label: `Through-Hulls: ${log.thru_hull_condition}`,
+      class: `condition-${log.thru_hull_condition.toLowerCase().replace(/\s+/g, "-")}`,
+    });
+  }
+
+  // Anode conditions
+  if (log.anode_conditions && log.anode_conditions.length > 0) {
+    const anodeStatus = log.anode_conditions.some(
+      (a) =>
+        a.condition?.toLowerCase().includes("replace") ||
+        a.condition?.toLowerCase().includes("poor"),
+    )
+      ? "needs-replacement"
+      : "good";
+
+    badges.push({
+      label: `Anodes: ${log.anode_conditions.length} inspected`,
+      class: `condition-${anodeStatus}`,
+    });
+  }
+
+  // Propeller conditions
+  if (log.propeller_conditions && log.propeller_conditions.length > 0) {
+    const propCondition = log.propeller_conditions[0]?.condition || "inspected";
+    badges.push({
+      label: `Propeller: ${propCondition}`,
+      class: `condition-${propCondition.toLowerCase().replace(/\s+/g, "-")}`,
+    });
+  }
 
   return `
-    <div class="timeline-item" data-log-id="${log.id}">
+    <div class="timeline-item" data-index="${index}">
       <div class="timeline-header">
-        <div>
-          <div class="timeline-date">${formatDate(log.service_date)}</div>
-          ${log.service_name ? `<div class="service-name">${escapeHtml(log.service_name)}</div>` : ""}
+        <div class="timeline-title-row">
+          <div>
+            <div class="timeline-date">${formatDate(log.service_date)}</div>
+            ${log.service_name ? `<div class="service-name">${escapeHtml(log.service_name)}</div>` : ""}
+          </div>
+          ${hasDetails ? '<span class="expand-icon">▼</span>' : ""}
         </div>
-        ${hasAnyDetails ? '<span class="expand-icon">▼</span>' : ""}
+
+        ${
+          badges.length > 0
+            ? `
+          <div class="condition-badges-row">
+            ${badges
+              .map(
+                (badge) => `
+              <span class="condition-badge ${badge.class}">
+                ${escapeHtml(badge.label)}
+              </span>
+            `,
+              )
+              .join("")}
+          </div>
+        `
+            : ""
+        }
       </div>
 
       ${
-        hasAnyDetails
+        hasDetails
           ? `
-        <div class="timeline-details">
-          ${videosSection}
+        <div class="timeline-details" id="details-${index}">
           ${createConditionsSection(log)}
           ${createAnodesSection(log)}
           ${createPropellersSection(log)}
-          ${
-            log.notes
-              ? `
-            <div class="detail-section">
-              <h4>Service Notes</h4>
-              <div class="notes-section">${escapeHtml(log.notes)}</div>
-            </div>
-          `
-              : ""
-          }
+          ${createNotesSection(log)}
+          ${createVideosSection(log, nextServiceDate)}
         </div>
       `
           : ""
@@ -520,6 +580,22 @@ function createPropellersSection(log) {
       `
           : ""
       }
+    </div>
+  `;
+}
+
+/**
+ * Create notes section
+ * @param {Object} log - Service log
+ * @returns {string} HTML string
+ */
+function createNotesSection(log) {
+  if (!log.notes) return "";
+
+  return `
+    <div class="detail-section">
+      <h4>Service Notes</h4>
+      <div class="notes-section">${escapeHtml(log.notes)}</div>
     </div>
   `;
 }

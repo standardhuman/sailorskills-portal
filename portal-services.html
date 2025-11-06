@@ -226,11 +226,18 @@
       background: var(--ss-bg-light);
     }
 
+    /* Timeline Item - Vertical Stacking */
     .timeline-header {
       display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
+      flex-direction: column;
+      gap: var(--ss-space-xs);
       margin-bottom: var(--ss-space-sm);
+    }
+
+    .timeline-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
     }
 
     .timeline-date {
@@ -243,7 +250,17 @@
       color: var(--ss-primary);
       font-size: var(--ss-text-sm);
       font-weight: 500;
-      margin-top: var(--ss-space-xs);
+    }
+
+    .expand-icon {
+      transition: transform 0.2s;
+      font-size: var(--ss-text-sm);
+      color: var(--ss-text-medium);
+      margin-left: auto;
+    }
+
+    .expand-icon.expanded {
+      transform: rotate(180deg);
     }
 
     .timeline-stats {
@@ -306,38 +323,51 @@
       color: var(--ss-text-dark);
     }
 
+    /* Condition Badges Row - Inline Flow */
+    .condition-badges-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--ss-space-sm);
+      margin-top: var(--ss-space-xs);
+    }
+
     .condition-badge {
       display: inline-block;
-      padding: 2px 8px;
+      padding: 4px 12px;
       border-radius: var(--ss-radius-none);
       font-size: var(--ss-text-xs);
       font-weight: 600;
-      text-transform: uppercase;
+      text-transform: capitalize;
     }
 
-    .condition-excellent {
+    .condition-badge.condition-excellent,
+    .condition-badge.condition-good {
       background: var(--ss-status-success-bg);
       color: var(--ss-status-success-text);
     }
 
-    .condition-good {
-      background: var(--ss-info-100);
-      color: var(--ss-info-700);
-    }
-
-    .condition-fair {
+    .condition-badge.condition-fair,
+    .condition-badge.condition-moderate {
       background: var(--ss-status-warning-bg);
       color: var(--ss-status-warning-text);
     }
 
-    .condition-poor {
+    .condition-badge.condition-poor,
+    .condition-badge.condition-needs-replacement {
       background: var(--ss-status-danger-bg);
       color: var(--ss-status-danger-text);
     }
 
-    .condition-critical {
-      background: var(--ss-error-200);
-      color: var(--ss-error-900);
+    .condition-badge.condition-sound,
+    .condition-badge.condition-inspected {
+      background: var(--ss-status-info-bg);
+      color: var(--ss-status-info-text);
+    }
+
+    .condition-badge.condition-unknown,
+    .condition-badge.condition-not-inspected {
+      background: var(--ss-status-neutral-bg);
+      color: var(--ss-status-neutral-text);
     }
 
     .anode-list {

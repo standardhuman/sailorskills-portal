@@ -381,7 +381,7 @@ function createConditionsSection(log) {
       ${
         log.thru_hull_notes
           ? `
-        <div style="margin-top: var(--ss-space-sm); font-size: var(--ss-font-size-sm); color: var(--ss-neutral-600); font-style: italic;">
+        <div style="margin-top: var(--ss-space-sm); font-size: var(--ss-text-sm); color: var(--ss-text-medium); font-style: italic;">
           ${escapeHtml(log.thru_hull_notes)}
         </div>
       `
@@ -447,9 +447,9 @@ function createAnodesSection(log) {
 
             return `
             <li class="anode-item">
-              <div>
-                ${locationText ? `<strong>${escapeHtml(locationText)}</strong>` : ""}
-                ${replacement ? '<span style="color: var(--ss-success-700); margin-left: var(--ss-space-xs);">✓ Replaced</span>' : ""}
+              <div style="display: flex; align-items: center; gap: var(--ss-space-xs);">
+                ${locationText ? `<strong style="font-size: var(--ss-text-sm); color: var(--ss-text-dark);">${escapeHtml(locationText)}</strong>` : ""}
+                ${replacement ? '<span style="color: var(--ss-status-success-text); font-size: var(--ss-text-xs);">✓ Replaced</span>' : ""}
               </div>
               <div>
                 <span class="condition-badge ${getConditionClass(anode.condition || anode.overall_condition || "fair")}">
@@ -499,14 +499,14 @@ function createPropellersSection(log) {
           .map(
             (prop) => `
           <li class="anode-item">
-            <div><strong>Propeller #${prop.number || 1}</strong></div>
+            <div><strong style="font-size: var(--ss-text-sm); color: var(--ss-text-dark);">Propeller #${prop.number || 1}</strong></div>
             <div>
               <span class="condition-badge ${getConditionClass(prop.condition || "good")}">
                 ${escapeHtml(prop.condition || "N/A")}
               </span>
             </div>
           </li>
-          ${prop.notes ? `<div style="padding-left: var(--ss-space-md); font-size: var(--ss-font-size-xs); color: var(--ss-neutral-600); font-style: italic;">${escapeHtml(prop.notes)}</div>` : ""}
+          ${prop.notes ? `<div style="padding-left: var(--ss-space-md); font-size: var(--ss-text-xs); color: var(--ss-text-medium); font-style: italic;">${escapeHtml(prop.notes)}</div>` : ""}
         `,
           )
           .join("")}
@@ -514,7 +514,7 @@ function createPropellersSection(log) {
       ${
         log.propeller_notes
           ? `
-        <div style="margin-top: var(--ss-space-sm); font-size: var(--ss-font-size-sm); color: var(--ss-neutral-600); font-style: italic;">
+        <div style="margin-top: var(--ss-space-sm); font-size: var(--ss-text-sm); color: var(--ss-text-medium); font-style: italic;">
           ${escapeHtml(log.propeller_notes)}
         </div>
       `

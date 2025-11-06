@@ -534,15 +534,15 @@ function createConditionsSection(log) {
   if (!hasConditions) return "";
 
   return `
-    <div style="margin-top: var(--ss-space-md);">
-      <h4 style="margin: 0 0 var(--ss-space-sm) 0; font-size: var(--ss-text-md); font-weight: 600; color: var(--ss-text-dark);">Vessel Condition</h4>
-      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--ss-space-sm);">
+    <div style="margin-top: 24px;">
+      <h4 style="margin: 0 0 12px 0; font-size: 16px; font-weight: 600; color: var(--ss-text-dark);">Vessel Condition</h4>
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;">
         ${
           log.paint_condition_overall
             ? `
-          <div>
-            <div style="font-size: var(--ss-text-xs); color: var(--ss-text-medium); margin-bottom: var(--ss-space-xs);">Paint Condition</div>
-            <span class="condition-badge ${getConditionClass(log.paint_condition_overall)}" style="display: inline-block; padding: var(--ss-space-xs) var(--ss-space-sm); border-radius: var(--ss-radius-none); font-size: var(--ss-text-xs); font-weight: 600;">
+          <div class="condition-item-card">
+            <div class="condition-item-label">Paint Condition</div>
+            <span class="condition-badge ${getConditionClass(log.paint_condition_overall)}">
               ${escapeHtml(log.paint_condition_overall)}
             </span>
           </div>
@@ -552,9 +552,9 @@ function createConditionsSection(log) {
         ${
           log.growth_level
             ? `
-          <div>
-            <div style="font-size: var(--ss-text-xs); color: var(--ss-text-medium); margin-bottom: var(--ss-space-xs);">Growth Level</div>
-            <div style="font-size: var(--ss-text-sm); color: var(--ss-text-dark);">${escapeHtml(log.growth_level)}</div>
+          <div class="condition-item-card">
+            <div class="condition-item-label">Growth Level</div>
+            <div style="font-size: 14px; color: var(--ss-text-dark); font-weight: 400;">${escapeHtml(log.growth_level)}</div>
           </div>
         `
             : ""
@@ -562,9 +562,9 @@ function createConditionsSection(log) {
         ${
           log.thru_hull_condition
             ? `
-          <div>
-            <div style="font-size: var(--ss-text-xs); color: var(--ss-text-medium); margin-bottom: var(--ss-space-xs);">Through-Hulls</div>
-            <div style="font-size: var(--ss-text-sm); color: var(--ss-text-dark);">${escapeHtml(log.thru_hull_condition)}</div>
+          <div class="condition-item-card">
+            <div class="condition-item-label">Through-Hulls</div>
+            <div style="font-size: 14px; color: var(--ss-text-dark); font-weight: 400;">${escapeHtml(log.thru_hull_condition)}</div>
           </div>
         `
             : ""

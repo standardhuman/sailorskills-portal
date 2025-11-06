@@ -282,29 +282,63 @@ function createTimelineItem(log, index, nextServiceDate = null) {
     });
   }
 
-  // Anode conditions
-  if (log.anode_conditions && log.anode_conditions.length > 0) {
-    const anodeStatus = log.anode_conditions.some(
-      (a) =>
-        a.condition?.toLowerCase().includes("replace") ||
-        a.condition?.toLowerCase().includes("poor"),
-    )
-      ? "needs-replacement"
-      : "good";
+  // Anode conditions - parse JSON if needed
+  if (log.anode_conditions) {
+    let anodeConditions = log.anode_conditions;
+    if (typeof log.anode_conditions === "string") {
+      try {
+        anodeConditions = JSON.parse(log.anode_conditions);
+      } catch (e) {
+        console.error("Error parsing anode_conditions:", e);
+        anodeConditions = null;
+      }
+    }
 
-    badges.push({
-      label: `Anodes: ${log.anode_conditions.length} inspected`,
-      class: `condition-${anodeStatus}`,
-    });
+    // Handle array or object format
+    if (anodeConditions && !Array.isArray(anodeConditions)) {
+      anodeConditions = anodeConditions.anodes || [];
+    }
+
+    if (anodeConditions && anodeConditions.length > 0) {
+      const anodeStatus = anodeConditions.some(
+        (a) =>
+          a.condition?.toLowerCase().includes("replace") ||
+          a.condition?.toLowerCase().includes("poor"),
+      )
+        ? "needs-replacement"
+        : "good";
+
+      badges.push({
+        label: `Anodes: ${anodeConditions.length} inspected`,
+        class: `condition-${anodeStatus}`,
+      });
+    }
   }
 
-  // Propeller conditions
-  if (log.propeller_conditions && log.propeller_conditions.length > 0) {
-    const propCondition = log.propeller_conditions[0]?.condition || "inspected";
-    badges.push({
-      label: `Propeller: ${propCondition}`,
-      class: `condition-${propCondition.toLowerCase().replace(/\s+/g, "-")}`,
-    });
+  // Propeller conditions - parse JSON if needed
+  if (log.propeller_conditions) {
+    let propellerConditions = log.propeller_conditions;
+    if (typeof log.propeller_conditions === "string") {
+      try {
+        propellerConditions = JSON.parse(log.propeller_conditions);
+      } catch (e) {
+        console.error("Error parsing propeller_conditions:", e);
+        propellerConditions = null;
+      }
+    }
+
+    // Handle array or object format
+    if (propellerConditions && !Array.isArray(propellerConditions)) {
+      propellerConditions = propellerConditions.propellers || [];
+    }
+
+    if (propellerConditions && propellerConditions.length > 0) {
+      const propCondition = propellerConditions[0]?.condition || "inspected";
+      badges.push({
+        label: `Propeller: ${propCondition}`,
+        class: `condition-${propCondition.toLowerCase().replace(/\s+/g, "-")}`,
+      });
+    }
   }
 
   return `

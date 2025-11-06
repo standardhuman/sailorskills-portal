@@ -669,18 +669,18 @@ function createPropellersSection(log) {
   }
 
   return `
-    <div style="margin-top: var(--ss-space-md);">
-      <h4 style="margin: 0 0 var(--ss-space-sm) 0; font-size: var(--ss-text-md); font-weight: 600; color: var(--ss-text-dark);">Propeller Condition</h4>
-      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--ss-space-sm);">
+    <div style="margin-top: 24px;">
+      <h4 style="margin: 0 0 12px 0; font-size: 16px; font-weight: 600; color: var(--ss-text-dark);">Propeller Condition</h4>
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;">
         ${propellers
           .map(
             (prop) => `
-          <div style="padding: var(--ss-space-sm); background: var(--ss-bg-light); border: 1px solid var(--ss-border);">
-            <div style="font-size: var(--ss-text-xs); color: var(--ss-text-medium); margin-bottom: var(--ss-space-xs);">Propeller #${prop.number || 1}</div>
-            <span class="condition-badge ${getConditionClass(prop.condition || "good")}" style="display: inline-block; padding: var(--ss-space-xs) var(--ss-space-sm); border-radius: var(--ss-radius-none); font-size: var(--ss-text-xs); font-weight: 600;">
+          <div class="condition-item-card">
+            <div class="condition-item-label">Propeller #${prop.number || 1}</div>
+            <span class="condition-badge ${getConditionClass(prop.condition || "good")}">
               ${escapeHtml(prop.condition || "N/A")}
             </span>
-            ${prop.notes ? `<div style="margin-top: var(--ss-space-xs); font-size: var(--ss-text-xs); color: var(--ss-text-medium); font-style: italic;">${escapeHtml(prop.notes)}</div>` : ""}
+            ${prop.notes ? `<div style="margin-top: 6px; font-size: 11px; color: #6b7280; font-style: italic;">${escapeHtml(prop.notes)}</div>` : ""}
           </div>
         `,
           )

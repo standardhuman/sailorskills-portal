@@ -170,15 +170,25 @@ export function formatShortDate(dateString) {
 export function getConditionClass(condition) {
   if (!condition) return "condition-default";
 
-  const conditionLower = condition.toLowerCase();
+  const conditionLower = condition.toLowerCase().trim();
 
-  // Standard condition mappings
+  // Full condition mappings matching billing slider
   const conditionMap = {
+    "not inspected": "condition-not-inspected",
+    "not-inspected": "condition-not-inspected",
     excellent: "condition-excellent",
+    "excellent-good": "condition-excellent-good",
+    "excellent good": "condition-excellent-good",
     good: "condition-good",
+    "good-fair": "condition-good-fair",
+    "good fair": "condition-good-fair",
     fair: "condition-fair",
+    "fair-poor": "condition-fair-poor",
+    "fair poor": "condition-fair-poor",
     poor: "condition-poor",
-    critical: "condition-critical",
+    "very poor": "condition-very-poor",
+    "very-poor": "condition-very-poor",
+    critical: "condition-critical", // Legacy alias for very poor
   };
 
   // Anode-specific status mappings
@@ -195,22 +205,45 @@ export function getConditionClass(condition) {
     return "condition-good";
   }
 
+  // Check for exact match first
+  if (conditionMap[conditionLower]) {
+    return conditionMap[conditionLower];
+  }
+
   // Check for comma-separated conditions (e.g., "Good, Fair")
   // Use the worst condition mentioned
-  if (conditionLower.includes("poor") || conditionLower.includes("critical")) {
+  if (
+    conditionLower.includes("very poor") ||
+    conditionLower.includes("critical")
+  ) {
+    return "condition-very-poor";
+  }
+  if (conditionLower.includes("poor")) {
     return "condition-poor";
+  }
+  if (conditionLower.includes("fair-poor")) {
+    return "condition-fair-poor";
   }
   if (conditionLower.includes("fair")) {
     return "condition-fair";
   }
+  if (conditionLower.includes("good-fair")) {
+    return "condition-good-fair";
+  }
   if (conditionLower.includes("good")) {
     return "condition-good";
+  }
+  if (conditionLower.includes("excellent-good")) {
+    return "condition-excellent-good";
   }
   if (conditionLower.includes("excellent")) {
     return "condition-excellent";
   }
+  if (conditionLower.includes("not inspected")) {
+    return "condition-not-inspected";
+  }
 
-  return conditionMap[conditionLower] || "condition-default";
+  return "condition-default";
 }
 
 /**

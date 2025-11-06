@@ -527,6 +527,7 @@
     }
 
     /* Mobile responsiveness for video grid */
+    /* Mobile responsiveness */
     @media (max-width: 768px) {
       .service-video-grid {
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -537,6 +538,23 @@
         width: 40px;
         height: 40px;
         font-size: var(--ss-text-lg);
+      }
+
+      .condition-badges-row {
+        gap: var(--ss-space-xs);
+      }
+
+      .condition-badge {
+        font-size: 11px;
+        padding: 3px 10px;
+      }
+
+      .timeline-item {
+        padding: var(--ss-space-md);
+      }
+
+      .detail-grid {
+        grid-template-columns: 1fr;
       }
     }
   </style>

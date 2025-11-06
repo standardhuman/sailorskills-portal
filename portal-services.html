@@ -268,13 +268,18 @@
       gap: var(--ss-space-md);
       font-size: var(--ss-text-xs);
       color: var(--ss-text-medium);
-      margin-bottom: var(--ss-space-sm);
+      margin-top: var(--ss-space-xs);
     }
 
     .timeline-stat {
       display: flex;
       align-items: center;
       gap: var(--ss-space-xs);
+    }
+
+    .timeline-stat strong {
+      font-weight: 600;
+      color: var(--ss-text-dark);
     }
 
     .timeline-details {
@@ -289,7 +294,7 @@
     }
 
     .detail-section {
-      margin-bottom: var(--ss-space-md);
+      margin-bottom: var(--ss-space-lg);
     }
 
     .detail-section h4 {
@@ -297,6 +302,8 @@
       font-weight: 600;
       color: var(--ss-text-dark);
       margin-bottom: var(--ss-space-sm);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
     .detail-grid {
@@ -316,11 +323,13 @@
       font-weight: 600;
       color: var(--ss-text-medium);
       text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
     .detail-value {
       font-size: var(--ss-text-sm);
       color: var(--ss-text-dark);
+      line-height: var(--ss-leading-relaxed);
     }
 
     /* Condition Badges Row - Inline Flow */
@@ -392,7 +401,8 @@
       border-left: 3px solid var(--ss-primary);
       font-size: var(--ss-text-sm);
       color: var(--ss-text-dark);
-      line-height: 1.6;
+      line-height: var(--ss-leading-relaxed);
+      margin-top: var(--ss-space-md);
     }
 
     .empty-state {

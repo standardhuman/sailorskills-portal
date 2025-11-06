@@ -14,7 +14,10 @@
   <link rel="stylesheet" href="/shared/src/ui/design-tokens.css">
   <link rel="stylesheet" href="/shared/src/ui/styles.css">
 
-  <!-- Page Styles -->
+  <!-- Portal Styles -->
+  <link rel="stylesheet" href="/src/ui/portal-styles.css">
+
+  <!-- Page-Specific Styles -->
   <style>
     body {
       margin: 0;
@@ -192,25 +195,25 @@
     }
 
     .alert-success {
-      background: #d4f4dd;
-      color: #00694d;
-      border: 1px solid var(--ss-success);
+      background: var(--ss-status-success-bg);
+      color: var(--ss-status-success-text);
+      border: 1px solid var(--ss-status-success-text);
     }
 
     .alert-error {
-      background: #ffd7d7;
-      color: #8b1a1a;
-      border: 1px solid var(--ss-danger);
+      background: var(--ss-status-danger-bg);
+      color: var(--ss-status-danger-text);
+      border: 1px solid var(--ss-status-danger-text);
     }
 
     .magic-link-info {
-      background: #e8ebfa;
-      color: #3d4d9e;
+      background: var(--ss-status-info-bg);
+      color: var(--ss-status-info-text);
       padding: var(--ss-space-sm);
       margin-bottom: var(--ss-space-md);
       border-radius: var(--ss-radius-none);
       font-size: var(--ss-text-xs);
-      border: 1px solid var(--ss-info);
+      border: 1px solid var(--ss-status-info-text);
     }
   </style>
 </head>

@@ -14,13 +14,16 @@
   <link rel="stylesheet" href="/shared/src/ui/design-tokens.css">
   <link rel="stylesheet" href="/shared/src/ui/styles.css">
 
-  <!-- Page Styles -->
+  <!-- Portal Styles -->
+  <link rel="stylesheet" href="/src/ui/portal-styles.css">
+
+  <!-- Page-Specific Styles -->
   <style>
     body {
       margin: 0;
       padding: 0;
-      font-family: var(--ss-font-family);
-      background: var(--ss-neutral-100);
+      font-family: var(--ss-font-primary);
+      background: var(--ss-bg-light);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -44,15 +47,15 @@
 
     .signup-header h1 {
       margin: 0 0 var(--ss-space-xs);
-      color: var(--ss-primary-600);
-      font-size: var(--ss-font-size-2xl);
+      color: var(--ss-primary);
+      font-size: var(--ss-text-2xl);
       font-weight: 700;
     }
 
     .signup-header p {
       margin: 0;
-      color: var(--ss-neutral-600);
-      font-size: var(--ss-font-size-sm);
+      color: var(--ss-text-medium);
+      font-size: var(--ss-text-sm);
     }
 
     .form-group {
@@ -62,40 +65,40 @@
     .form-group label {
       display: block;
       margin-bottom: var(--ss-space-xs);
-      font-size: var(--ss-font-size-sm);
+      font-size: var(--ss-text-sm);
       font-weight: 600;
-      color: var(--ss-neutral-700);
+      color: var(--ss-text-dark);
     }
 
     .form-group input {
       width: 100%;
       padding: var(--ss-space-sm);
-      border: 1px solid var(--ss-neutral-300);
+      border: 1px solid var(--ss-border);
       border-radius: var(--ss-radius-none);
-      font-size: var(--ss-font-size-sm);
-      font-family: var(--ss-font-family);
+      font-size: var(--ss-text-sm);
+      font-family: var(--ss-font-primary);
       box-sizing: border-box;
     }
 
     .form-group input:focus {
       outline: none;
-      border-color: var(--ss-primary-500);
+      border-color: var(--ss-primary);
     }
 
     .form-group small {
       display: block;
       margin-top: var(--ss-space-xs);
-      font-size: var(--ss-font-size-xs);
-      color: var(--ss-neutral-600);
+      font-size: var(--ss-text-xs);
+      color: var(--ss-text-medium);
     }
 
     .password-requirements {
-      background: var(--ss-neutral-100);
+      background: var(--ss-bg-light);
       padding: var(--ss-space-sm);
       margin-top: var(--ss-space-xs);
       border-radius: var(--ss-radius-none);
-      font-size: var(--ss-font-size-xs);
-      color: var(--ss-neutral-700);
+      font-size: var(--ss-text-xs);
+      color: var(--ss-text-dark);
     }
 
     .password-requirements ul {
@@ -112,24 +115,24 @@
       padding: var(--ss-space-sm) var(--ss-space-md);
       border: none;
       border-radius: var(--ss-radius-none);
-      font-size: var(--ss-font-size-sm);
+      font-size: var(--ss-text-sm);
       font-weight: 600;
-      font-family: var(--ss-font-family);
+      font-family: var(--ss-font-primary);
       cursor: pointer;
       transition: all 0.2s;
     }
 
     .btn-primary {
-      background: var(--ss-primary-600);
+      background: var(--ss-primary);
       color: white;
     }
 
     .btn-primary:hover {
-      background: var(--ss-primary-700);
+      background: var(--ss-primary-hover);
     }
 
     .btn-primary:disabled {
-      background: var(--ss-neutral-400);
+      background: var(--ss-border);
       cursor: not-allowed;
     }
 
@@ -137,17 +140,17 @@
       text-align: center;
       margin-top: var(--ss-space-lg);
       padding-top: var(--ss-space-lg);
-      border-top: 1px solid var(--ss-neutral-200);
+      border-top: 1px solid var(--ss-border-subtle);
     }
 
     .login-link p {
       margin: 0;
-      font-size: var(--ss-font-size-sm);
-      color: var(--ss-neutral-600);
+      font-size: var(--ss-text-sm);
+      color: var(--ss-text-medium);
     }
 
     .login-link a {
-      color: var(--ss-primary-600);
+      color: var(--ss-primary);
       text-decoration: none;
       font-weight: 600;
     }
@@ -160,7 +163,7 @@
       padding: var(--ss-space-sm);
       margin-bottom: var(--ss-space-md);
       border-radius: var(--ss-radius-none);
-      font-size: var(--ss-font-size-sm);
+      font-size: var(--ss-text-sm);
     }
 
     .alert-success {

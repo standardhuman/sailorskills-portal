@@ -272,22 +272,26 @@
       margin-bottom: var(--ss-space-sm);
     }
 
-    /* Compact Marker (32px) */
     .condition-marker {
       position: absolute;
-      top: -6px;
+      top: -14px;
       transform: translateX(-50%);
-      width: 32px;
-      height: 32px;
+      width: 48px;
+      height: 48px;
       background: white;
-      border: 3px solid var(--ss-primary);
+      border: 4px solid var(--ss-primary);
       border-radius: 50%;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 16px;
-      transition: all 0.3s ease;
+      font-size: 20px;
+      transition: all 0.2s ease;
+    }
+
+    .condition-marker:hover {
+      transform: translateX(-50%) scale(1.05);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
     }
 
     .condition-labels {
@@ -339,10 +343,10 @@
     /* Mobile responsive */
     @media (max-width: 768px) {
       .condition-marker {
-        width: 28px;
-        height: 28px;
-        font-size: 14px;
-        top: -4px;
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+        top: -10px;
       }
 
       .paint-condition-section {

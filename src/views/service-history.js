@@ -395,12 +395,25 @@ function createConditionsSection(log) {
  * Create anodes section
  */
 function createAnodesSection(log) {
-  // Ensure anode_conditions is an array
   if (!log.anode_conditions) return "";
 
-  const anodeConditions = Array.isArray(log.anode_conditions)
-    ? log.anode_conditions
-    : log.anode_conditions.anodes || []; // Handle object format {anodes: [...]}
+  // Parse JSON string if needed
+  let anodeConditions;
+  if (typeof log.anode_conditions === "string") {
+    try {
+      anodeConditions = JSON.parse(log.anode_conditions);
+    } catch (e) {
+      console.error("Error parsing anode_conditions:", e);
+      return "";
+    }
+  } else {
+    anodeConditions = log.anode_conditions;
+  }
+
+  // Handle array or object format
+  if (!Array.isArray(anodeConditions)) {
+    anodeConditions = anodeConditions.anodes || [];
+  }
 
   if (anodeConditions.length === 0) return "";
 
@@ -456,10 +469,25 @@ function createAnodesSection(log) {
  * Create propellers section
  */
 function createPropellersSection(log) {
-  // Ensure propellers is an array
   if (!log.propellers) return "";
 
-  const propellers = Array.isArray(log.propellers) ? log.propellers : [];
+  // Parse JSON string if needed
+  let propellers;
+  if (typeof log.propellers === "string") {
+    try {
+      propellers = JSON.parse(log.propellers);
+    } catch (e) {
+      console.error("Error parsing propellers:", e);
+      return "";
+    }
+  } else {
+    propellers = log.propellers;
+  }
+
+  // Ensure it's an array
+  if (!Array.isArray(propellers)) {
+    propellers = [];
+  }
 
   if (propellers.length === 0) return "";
 

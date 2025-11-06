@@ -232,13 +232,14 @@
       color: var(--ss-text-medium);
     }
 
-    /* Paint Condition Section */
+    /* Paint Condition Card */
     .paint-condition-section {
       background: white;
-      padding: var(--ss-space-xl);
+      padding: var(--ss-space-lg);
       border-radius: var(--ss-radius-none);
-      box-shadow: var(--ss-shadow-md);
-      margin-bottom: var(--ss-space-xl);
+      box-shadow: var(--ss-shadow-sm);
+      border: 1px solid var(--ss-border-subtle);
+      margin-bottom: var(--ss-space-lg);
     }
 
     .paint-condition-section h3 {
@@ -249,43 +250,44 @@
     }
 
     .paint-condition-display {
-      margin-top: var(--ss-space-lg);
+      margin-top: var(--ss-space-md);
     }
 
-    /* Rainbow Gradient Bar */
+    /* Compact Gradient Bar (20px) */
     .gradient-bar {
-      height: 40px;
-      border-radius: 8px;
+      height: 20px;
+      border-radius: 4px;
       position: relative;
       background: linear-gradient(to right,
-        #b0b0b0 0%,      /* Not Inspected - gray */
-        #00b894 12.5%,   /* Excellent - green */
-        #4caf50 25%,     /* Exc-Good */
-        #8bc34a 37.5%,   /* Good - lime */
-        #ffc107 50%,     /* Good-Fair - yellow */
-        #ff9800 62.5%,   /* Fair - orange */
-        #ff5722 75%,     /* Fair-Poor - deep orange */
-        #d63031 87.5%,   /* Poor - red */
-        #8b0000 100%     /* Very Poor - dark red */
+        #b0b0b0 0%,      /* Not Inspected */
+        #00b894 12.5%,   /* Excellent */
+        #4caf50 25%,     /* Excellent-Good */
+        #8bc34a 37.5%,   /* Good */
+        #ffc107 50%,     /* Good-Fair */
+        #ff9800 62.5%,   /* Fair */
+        #ff5722 75%,     /* Fair-Poor */
+        #d63031 87.5%,   /* Poor */
+        #8b0000 100%     /* Very Poor */
       );
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      margin-bottom: var(--ss-space-md);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      margin-bottom: var(--ss-space-sm);
     }
 
+    /* Compact Marker (32px) */
     .condition-marker {
       position: absolute;
-      top: -8px;
+      top: -6px;
       transform: translateX(-50%);
-      width: 56px;
-      height: 56px;
+      width: 32px;
+      height: 32px;
       background: white;
-      border: 4px solid var(--ss-primary);
+      border: 3px solid var(--ss-primary);
       border-radius: 50%;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 24px;
+      font-size: 16px;
       transition: all 0.3s ease;
     }
 
@@ -295,44 +297,58 @@
       font-size: var(--ss-text-xs);
       color: var(--ss-text-medium);
       margin-top: var(--ss-space-xs);
+      padding: 0 var(--ss-space-xs);
     }
 
     .condition-labels span {
-      flex: 1;
-      text-align: center;
       font-weight: 500;
     }
 
     .paint-status-message {
-      margin-top: var(--ss-space-lg);
-      padding: var(--ss-space-md);
+      margin-top: var(--ss-space-md);
+      padding: var(--ss-space-sm);
       border-radius: var(--ss-radius-none);
       font-size: var(--ss-text-sm);
       font-weight: 500;
+      border-left: 4px solid;
     }
 
     .paint-status-message.good {
       background: rgba(0, 184, 148, 0.1);
       color: #00b894;
-      border-left: 4px solid #00b894;
+      border-color: #00b894;
     }
 
     .paint-status-message.due-soon {
       background: rgba(255, 193, 7, 0.1);
       color: #f59e0b;
-      border-left: 4px solid #ffc107;
+      border-color: #ffc107;
     }
 
     .paint-status-message.past-due {
       background: rgba(214, 48, 49, 0.1);
       color: #d63031;
-      border-left: 4px solid #d63031;
+      border-color: #d63031;
     }
 
     .service-date-info {
       font-size: var(--ss-text-xs);
       color: var(--ss-text-medium);
       margin-top: var(--ss-space-xs);
+    }
+
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+      .condition-marker {
+        width: 28px;
+        height: 28px;
+        font-size: 14px;
+        top: -4px;
+      }
+
+      .paint-condition-section {
+        padding: var(--ss-space-md);
+      }
     }
 
     /* Latest Service Section */

@@ -183,13 +183,17 @@ async function loadPaintCondition(boatId) {
   if (!paintData) {
     // No service history yet - hide section
     const section = document.getElementById("paint-condition-section");
-    section.style.display = "none";
+    if (section) {
+      section.style.display = "none";
+    }
     return;
   }
 
   // Show the paint condition section
   const section = document.getElementById("paint-condition-section");
-  section.style.display = "block";
+  if (section) {
+    section.style.display = "block";
+  }
 
   // Map paint condition to position percentage on gradient
   const conditionMap = {
@@ -208,7 +212,9 @@ async function loadPaintCondition(boatId) {
 
   // Position the marker on the gradient
   const marker = document.getElementById("condition-marker");
-  marker.style.left = `${position}%`;
+  if (marker) {
+    marker.style.left = `${position}%`;
+  }
 
   // Get paint status
   const days = daysSinceService(paintData.serviceDate);
@@ -216,18 +222,22 @@ async function loadPaintCondition(boatId) {
 
   // Update status message
   const messageEl = document.getElementById("paint-status-message");
-  messageEl.textContent = status.message;
-  messageEl.className = `paint-status-message ${status.status}`;
+  if (messageEl) {
+    messageEl.textContent = status.message;
+    messageEl.className = `paint-status-message ${status.status}`;
+  }
 
   // Update service date info
   const dateInfo = document.getElementById("service-date-info");
-  if (paintData.serviceDate && days !== null) {
+  if (dateInfo && paintData.serviceDate && days !== null) {
     dateInfo.textContent = `Last inspected ${days} day${days !== 1 ? "s" : ""} ago (${formatDate(paintData.serviceDate)})`;
   }
 
-  // Update condition stat
+  // Update condition stat if it exists
   const conditionStat = document.getElementById("condition-stat");
-  conditionStat.textContent = formatConditionText(paintData.overall);
+  if (conditionStat) {
+    conditionStat.textContent = formatConditionText(paintData.overall);
+  }
 }
 
 /**

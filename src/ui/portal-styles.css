@@ -12,7 +12,7 @@
  */
 
 /* ===== IMPORT SHARED DESIGN TOKENS ===== */
-@import url("../../sailorskills-shared/src/ui/design-tokens.css");
+@import url("../../shared/src/ui/design-tokens.css");
 
 /* ===== GLOBAL BASE STYLES ===== */
 /* Already handled by design-tokens.css, but adding Portal-specific overrides */

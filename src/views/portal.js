@@ -158,6 +158,9 @@ async function loadBoatData() {
   document.getElementById("welcome-heading").textContent =
     `Welcome to ${boat.name}'s Portal`;
 
+  // Load paint condition
+  await loadPaintCondition(boat.id);
+
   // Load latest service details (includes videos now - unified report)
   await loadLatestServiceDetails(boat.id);
 

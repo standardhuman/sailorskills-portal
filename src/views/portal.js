@@ -15,7 +15,6 @@ import {
   getPaintStatus,
   daysSinceService,
   getServiceMedia,
-  getBoatPlaylist,
 } from "../api/boat-data.js";
 
 // Require authentication
@@ -229,47 +228,45 @@ async function loadPaintCondition(boatId) {
  * @param {string} boatId - Boat UUID
  */
 async function loadServiceMedia(boatId) {
-  const { playlist, error } = await getBoatPlaylist(boatId);
+  const { media, error } = await getServiceMedia(boatId);
 
   if (error) {
-    console.error("Error loading playlist:", error);
+    console.error("Error loading service media:", error);
   }
 
   // Show videos section
   const section = document.getElementById("videos-section");
   const grid = document.getElementById("video-grid");
 
-  // Check if playlist exists
-  if (!playlist) {
+  // Filter media to only show videos (not photos for now)
+  const videos =
+    media?.filter((item) => item.id && item.thumbnail && item.url) || [];
+
+  if (videos.length === 0) {
     grid.innerHTML =
-      '<div class="no-videos-message">No service videos available yet. Videos from your services will appear here.</div>';
+      '<div class="no-videos-message">No videos available yet. Videos from your latest service will appear here.</div>';
     section.style.display = "block";
     return;
   }
 
-  // Display playlist link card
-  grid.innerHTML = `
-    <div class="youtube-playlist-card">
-      <div class="playlist-icon">
-        <svg viewBox="0 0 24 24" width="48" height="48" fill="#FF0000">
-          <path d="M10 15l5.19-3L10 9v6m11.56-7.83c.13.47.22 1.1.28 1.9.07.8.1 1.49.1 2.09L22 12c0 2.19-.16 3.8-.44 4.83-.25.9-.83 1.48-1.73 1.73-.47.13-1.33.22-2.65.28-1.3.07-2.49.1-3.59.1L12 19c-4.19 0-6.8-.16-7.83-.44-.9-.25-1.48-.83-1.73-1.73-.13-.47-.22-1.1-.28-1.9-.07-.8-.1-1.49-.1-2.09L2 12c0-2.19.16-3.8.44-4.83.25-.9.83-1.48 1.73-1.73.47-.13 1.33-.22 2.65-.28 1.3-.07 2.49-.1 3.59-.1L12 5c4.19 0 6.8.16 7.83.44.9.25 1.48.83 1.73 1.73z"/>
-        </svg>
-      </div>
-      <div class="playlist-content">
-        <h4>Service Video Playlist</h4>
-        <p>Watch all videos from your boat's services</p>
-        <a href="${escapeHtml(playlist.playlist_url)}"
-           target="_blank"
-           rel="noopener noreferrer"
-           class="playlist-link-btn">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-            <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
-          </svg>
-          Watch on YouTube
-        </a>
-      </div>
-    </div>
-  `;
+  // Display video thumbnails
+  grid.innerHTML = ""; // Clear existing content
+
+  videos.forEach((video) => {
+    const videoCard = document.createElement("div");
+    videoCard.className = "video-thumbnail";
+    videoCard.innerHTML = `
+      <img src="${escapeHtml(video.thumbnail)}" alt="${escapeHtml(video.title)}">
+      <div class="video-play-overlay">▶</div>
+    `;
+
+    // Click to open video in new tab
+    videoCard.addEventListener("click", () => {
+      window.open(video.url, "_blank");
+    });
+
+    grid.appendChild(videoCard);
+  });
 
   section.style.display = "block";
 }

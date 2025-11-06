@@ -605,26 +605,30 @@ function createAnodesSection(log) {
   }
 
   return `
-    <div style="margin-top: var(--ss-space-md);">
-      <h4 style="margin: 0 0 var(--ss-space-sm) 0; font-size: var(--ss-text-md); font-weight: 600; color: var(--ss-text-dark);">⚓ Anode Inspection</h4>
-      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--ss-space-sm);">
+    <div style="margin-top: 24px;">
+      <h4 style="margin: 0 0 12px 0; font-size: 16px; font-weight: 600; color: var(--ss-text-dark);">⚓ Anode Inspection</h4>
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;">
         ${anodeConditions
           .map((anode) => {
             const location = anode.location || anode.type || "";
             const position = anode.position ? ` (${anode.position})` : "";
             const locationText =
-              location || position ? `${location}${position}`.trim() : "";
+              location || position ? `${location}${position}`.trim() : "Anode";
             const condition =
               anode.condition_percent !== undefined
                 ? `${anode.condition_percent}%`
                 : anode.condition || anode.overall_condition || "N/A";
+            const conditionClass =
+              anode.condition || anode.overall_condition || "fair";
 
             return `
-            <div style="padding: var(--ss-space-sm); background: var(--ss-bg-light); border: 1px solid var(--ss-border);">
-              ${locationText ? `<div style="font-size: var(--ss-text-xs); color: var(--ss-text-medium); margin-bottom: var(--ss-space-xs);">${escapeHtml(locationText)}</div>` : ""}
-              <span class="condition-badge ${getConditionClass(anode.condition || anode.overall_condition || "fair")}" style="display: inline-block; padding: var(--ss-space-xs) var(--ss-space-sm); border-radius: var(--ss-radius-none); font-size: var(--ss-text-xs); font-weight: 600;">
-                ${escapeHtml(condition)}
-              </span>
+            <div class="condition-item-card" style="background: #fafbfc;">
+              <div class="condition-item-label">${escapeHtml(locationText)}</div>
+              ${
+                anode.condition_percent !== undefined
+                  ? `<div style="font-size: 24px; font-weight: 700; color: var(--ss-text-dark);">${condition}</div>`
+                  : `<span class="condition-badge ${getConditionClass(conditionClass)}">${escapeHtml(condition)}</span>`
+              }
             </div>
           `;
           })

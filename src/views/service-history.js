@@ -36,7 +36,6 @@ if (userError || !user) {
 // DOM Elements (must be defined before any potential showEmptyState() calls)
 const userEmailEl = document.getElementById("user-email");
 const logoutBtn = document.getElementById("logout-btn");
-const dateRangeSelect = document.getElementById("date-range");
 const timelineContainer = document.getElementById("service-timeline");
 const statTotalEl = document.getElementById("stat-total");
 const statYearEl = document.getElementById("stat-year");
@@ -73,9 +72,6 @@ function setupEventListeners() {
     await logout();
     window.location.href = "/login.html";
   });
-
-  // Filter change handler
-  dateRangeSelect.addEventListener("change", loadServices);
 }
 
 // Initialize
@@ -121,19 +117,8 @@ async function loadServices() {
   timelineContainer.innerHTML =
     '<div class="loader">Loading service history...</div>';
 
-  // Get date range filter
-  const dateRange = dateRangeSelect.value;
-  const filters = {};
-
-  if (dateRange !== "all") {
-    const days = parseInt(dateRange);
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - days);
-    filters.startDate = startDate.toISOString().split("T")[0];
-  }
-
-  // Load service logs
-  const { serviceLogs, error } = await loadServiceLogs(currentBoat.id, filters);
+  // Load all service logs
+  const { serviceLogs, error } = await loadServiceLogs(currentBoat.id);
 
   if (error) {
     console.error("Failed to load service logs:", error);

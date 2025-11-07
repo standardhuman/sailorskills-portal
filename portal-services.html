@@ -166,43 +166,6 @@
       font-weight: 700;
     }
 
-    /* Filters */
-    .filters-section {
-      background: white;
-      padding: var(--ss-space-md);
-      border-radius: var(--ss-radius-none);
-      box-shadow: var(--ss-shadow-sm);
-      margin-bottom: var(--ss-space-lg);
-      display: flex;
-      gap: var(--ss-space-md);
-      flex-wrap: wrap;
-      align-items: flex-end;
-    }
-
-    .filter-group {
-      flex: 1;
-      min-width: 150px;
-    }
-
-    .filter-group label {
-      display: block;
-      font-size: var(--ss-text-xs);
-      font-weight: 600;
-      color: var(--ss-text-dark);
-      margin-bottom: var(--ss-space-xs);
-      text-transform: uppercase;
-    }
-
-    .filter-group select,
-    .filter-group input {
-      width: 100%;
-      padding: var(--ss-space-sm);
-      border: 1px solid var(--ss-border);
-      border-radius: var(--ss-radius-none);
-      font-size: var(--ss-text-sm);
-      font-family: var(--ss-font-primary);
-    }
-
     /* Service Timeline */
     .service-timeline {
       background: white;
@@ -601,20 +564,6 @@
       <div class="stat-card">
         <h4>Last Service</h4>
         <p class="stat-value" id="stat-last" style="font-size: var(--ss-text-sm);">-</p>
-      </div>
-    </div>
-
-    <!-- Filters -->
-    <div class="filters-section">
-      <div class="filter-group">
-        <label for="date-range">Date Range</label>
-        <select id="date-range">
-          <option value="all">All Time</option>
-          <option value="30">Last 30 Days</option>
-          <option value="90">Last 3 Months</option>
-          <option value="180">Last 6 Months</option>
-          <option value="365">Last Year</option>
-        </select>
       </div>
     </div>
 

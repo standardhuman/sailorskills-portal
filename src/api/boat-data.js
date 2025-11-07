@@ -90,17 +90,34 @@ function normalizeCondition(condition) {
 
 /**
  * Get paint condition data for a boat
- * Returns the latest paint condition assessment
+ * Returns the latest service that included paint inspection
+ * (not necessarily the most recent service overall)
  * @param {string} boatId - Boat UUID
  * @returns {Promise<{paintData: Object|null, error: any}>}
  */
 export async function getPaintCondition(boatId) {
   try {
-    const { serviceLog, error } = await getLatestServiceLog(boatId);
+    // Query for latest service that has paint condition data
+    // (not just latest service overall, which might be anode-only, etc.)
+    const { data, error } = await supabase
+      .from("service_logs")
+      .select("*")
+      .eq("boat_id", boatId)
+      .not("paint_condition_overall", "is", null)
+      .order("service_date", { ascending: false })
+      .limit(1);
 
-    if (error || !serviceLog) {
+    if (error) {
+      console.error("Error fetching paint condition:", error);
       return { paintData: null, error };
     }
+
+    if (!data || data.length === 0) {
+      // No paint inspection data found
+      return { paintData: null, error: null };
+    }
+
+    const serviceLog = data[0];
 
     const paintData = {
       overall: normalizeCondition(serviceLog.paint_condition_overall),

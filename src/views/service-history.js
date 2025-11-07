@@ -87,6 +87,10 @@ async function initImpersonationBanner() {
     bannerEl.style.display = "flex";
   }
 
+  // Hide header selector when impersonating
+  const headerSelector = document.getElementById("admin-customer-selector");
+  if (headerSelector) headerSelector.style.display = "none";
+
   // Load all customers for banner selector
   const { customers, error } = await getAllCustomers();
   if (error) {

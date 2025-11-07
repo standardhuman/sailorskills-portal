@@ -9,7 +9,10 @@ import {
   getUserBoats,
   logout,
   isAdmin,
+  setImpersonation,
+  clearImpersonation,
 } from "../auth/auth.js";
+import { getAllCustomers } from "../api/customers.js";
 import {
   getPaintCondition,
   getPaintStatus,
@@ -33,6 +36,55 @@ let currentUser = null;
 let userBoats = [];
 let selectedBoatId = null;
 let isAdminUser = false;
+
+/**
+ * Initialize customer selector for admins
+ */
+async function initCustomerSelector() {
+  if (!isAdminUser) return;
+
+  const selectorEl = document.getElementById("admin-customer-selector");
+  const searchInput = document.getElementById("customer-search");
+  const datalist = document.getElementById("customer-datalist");
+
+  // Show selector for admins
+  selectorEl.style.display = "flex";
+
+  // Load all customers
+  const { customers, error } = await getAllCustomers();
+  if (error) {
+    console.error("Failed to load customers for selector:", error);
+    return;
+  }
+
+  // Populate datalist
+  customers.forEach((customer) => {
+    const option = document.createElement("option");
+    option.value = customer.displayText;
+    option.dataset.customerId = customer.id;
+    datalist.appendChild(option);
+  });
+
+  // Handle customer selection
+  searchInput.addEventListener("change", async (e) => {
+    const selectedText = e.target.value;
+
+    // Find matching customer
+    const selectedOption = Array.from(datalist.options).find(
+      (opt) => opt.value === selectedText,
+    );
+
+    if (selectedOption) {
+      const customerId = selectedOption.dataset.customerId;
+      const { success } = await setImpersonation(customerId);
+
+      if (success) {
+        // Reload page to show impersonated view
+        window.location.reload();
+      }
+    }
+  });
+}
 
 /**
  * Initialize portal
@@ -62,6 +114,9 @@ async function init() {
 
   // Load boats
   await loadBoats();
+
+  // Initialize customer selector for admins
+  await initCustomerSelector();
 
   // Update welcome message
   updateWelcomeMessage();

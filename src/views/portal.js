@@ -530,6 +530,7 @@ async function createServiceVideosSection(boatId, serviceDate) {
 
 /**
  * Normalize condition from database (convert comma-separated to hyphenated)
+ * Orders from better to worse condition for consistent display
  * @param {string} condition - Raw condition from database
  * @returns {string} Normalized condition
  */
@@ -538,7 +539,7 @@ function normalizeDisplayCondition(condition) {
 
   const raw = condition.trim();
 
-  // Handle comma-separated ranges: "Fair, Poor" → "Fair-Poor"
+  // Handle comma-separated ranges: "Fair, Good" → "Good-Fair"
   if (raw.includes(",")) {
     const parts = raw.split(",").map((p) => p.trim());
 
@@ -547,7 +548,30 @@ function normalizeDisplayCondition(condition) {
       return "Poor";
     }
 
-    // Join with hyphen for range display
+    // Severity ranking (lower number = better condition)
+    const severityMap = {
+      "Not Inspected": 0,
+      Excellent: 1,
+      "Excellent-Good": 2,
+      Good: 3,
+      "Good-Fair": 4,
+      Fair: 5,
+      "Fair-Poor": 6,
+      Poor: 7,
+      Heavy: 7, // growth level
+      Moderate: 4, // growth level
+      Minimal: 2, // growth level
+      "Very Poor": 8,
+    };
+
+    // Sort parts by severity (better condition first)
+    parts.sort((a, b) => {
+      const sevA = severityMap[a] || 99;
+      const sevB = severityMap[b] || 99;
+      return sevA - sevB;
+    });
+
+    // Join with hyphen for range display: "Good-Fair", "Excellent-Good", etc.
     return parts.join("-");
   }
 

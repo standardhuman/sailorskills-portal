@@ -37,7 +37,8 @@ export async function getLatestServiceLog(boatId) {
 
 /**
  * Normalize condition from Notion import format to standard format
- * Converts "Fair, Poor" → "fair-poor", "Excellent, Good" → "excellent-good"
+ * Converts "Fair, Poor" → "fair-poor", "Fair, Good" → "good-fair"
+ * Always orders from better condition to worse condition
  * @param {string} condition - Raw condition from database
  * @returns {string} Normalized condition
  */
@@ -48,7 +49,6 @@ function normalizeCondition(condition) {
 
   // Handle comma-separated ranges (e.g., "Fair, Poor" means fair-to-poor range)
   if (raw.includes(",")) {
-    // Convert to hyphenated format: "Fair, Poor" → "fair-poor"
     const parts = raw.split(",").map((p) => p.trim().toLowerCase());
 
     // Handle special cases
@@ -57,7 +57,31 @@ function normalizeCondition(condition) {
       return "poor";
     }
 
-    // Join with hyphen for range
+    // Severity ranking (lower number = better condition)
+    const severityMap = {
+      "not inspected": 0,
+      "not-inspected": 0,
+      excellent: 1,
+      "excellent-good": 2,
+      good: 3,
+      "good-fair": 4,
+      fair: 5,
+      "fair-poor": 6,
+      poor: 7,
+      heavy: 7, // growth level
+      moderate: 4, // growth level
+      minimal: 2, // growth level
+      "very-poor": 8,
+    };
+
+    // Sort parts by severity (better condition first)
+    parts.sort((a, b) => {
+      const sevA = severityMap[a] || 99;
+      const sevB = severityMap[b] || 99;
+      return sevA - sevB;
+    });
+
+    // Join with hyphen for range: "good-fair", "excellent-good", etc.
     return parts.join("-");
   }
 

@@ -8,7 +8,11 @@ import {
   getCurrentUser,
   getEffectiveUser,
   logout,
+  isAdmin,
+  setImpersonation,
+  clearImpersonation,
 } from "../auth/auth.js";
+import { getAllCustomers } from "../api/customers.js";
 import {
   getAccountInfo,
   getCustomerInfo,
@@ -37,6 +41,68 @@ let currentPreferences = null;
 let currentBoatId = null;
 
 /**
+ * Initialize impersonation banner
+ */
+async function initImpersonationBanner() {
+  const impersonatedId = sessionStorage.getItem("impersonatedCustomerId");
+  if (!impersonatedId) return;
+
+  const bannerEl = document.getElementById("impersonation-banner");
+  const displayEl = document.getElementById("impersonated-customer-display");
+  const exitBtn = document.getElementById("exit-impersonation-btn");
+
+  if (bannerEl) bannerEl.style.display = "flex";
+  if (displayEl && currentUser) displayEl.textContent = currentUser.email;
+  if (exitBtn) {
+    exitBtn.addEventListener("click", () => {
+      clearImpersonation();
+      window.location.reload();
+    });
+  }
+}
+
+/**
+ * Initialize customer selector for admins
+ */
+async function initCustomerSelector() {
+  const adminStatus = await isAdmin(currentUser.id);
+  if (!adminStatus) return;
+
+  const selectorEl = document.getElementById("admin-customer-selector");
+  const searchInput = document.getElementById("customer-search");
+  const datalist = document.getElementById("customer-datalist");
+
+  if (!selectorEl || !searchInput || !datalist) return;
+  selectorEl.style.display = "flex";
+
+  const { customers, error } = await getAllCustomers();
+  if (error) {
+    console.error("Failed to load customers for selector:", error);
+    return;
+  }
+
+  customers.forEach((customer) => {
+    const option = document.createElement("option");
+    option.value = customer.displayText;
+    option.dataset.customerId = customer.id;
+    datalist.appendChild(option);
+  });
+
+  searchInput.addEventListener("change", async (e) => {
+    const selectedText = e.target.value;
+    const selectedOption = Array.from(datalist.options).find(
+      (opt) => opt.value === selectedText,
+    );
+
+    if (selectedOption) {
+      const customerId = selectedOption.dataset.customerId;
+      const { success } = await setImpersonation(customerId);
+      if (success) window.location.reload();
+    }
+  });
+}
+
+/**
  * Initialize page
  */
 async function init() {
@@ -50,6 +116,10 @@ async function init() {
 
   currentUser = user;
   document.getElementById("user-email").textContent = user.email;
+
+  // Initialize impersonation UI
+  await initImpersonationBanner();
+  await initCustomerSelector();
 
   // Load account data
   await loadAccountInfo();

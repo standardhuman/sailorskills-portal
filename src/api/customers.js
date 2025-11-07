@@ -3,8 +3,10 @@
  * Admin-only functions for managing customer data
  */
 
-import { supabase } from "../lib/supabase.js";
+import { createSupabaseClient } from "../lib/supabase.js";
 import { getCurrentUser, isAdmin } from "../auth/auth.js";
+
+const supabase = createSupabaseClient();
 
 /**
  * Get all customers for admin selector

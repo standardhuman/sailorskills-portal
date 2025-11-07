@@ -3,7 +3,13 @@
  * Two-way messaging with file attachments and real-time updates
  */
 
-import { requireAuth, getCurrentUser, getUserBoats, logout } from '../auth/auth.js';
+import {
+  requireAuth,
+  getCurrentUser,
+  getEffectiveUser,
+  getUserBoats,
+  logout,
+} from "../auth/auth.js";
 import {
   loadConversations,
   loadThread,
@@ -15,13 +21,13 @@ import {
   unsubscribeFromMessages,
   formatMessageTime,
   formatFileSize,
-  isImage
-} from '../api/messages.js';
+  isImage,
+} from "../api/messages.js";
 
 // Require authentication
 const isAuth = await requireAuth();
 if (!isAuth) {
-  throw new Error('Not authenticated');
+  throw new Error("Not authenticated");
 }
 
 // State
@@ -38,31 +44,31 @@ let selectedFiles = [];
  */
 async function init() {
   // Get current user
-  const { user, error: userError } = await getCurrentUser();
+  const { user, error: userError } = await getEffectiveUser();
   if (userError || !user) {
-    console.error('Error loading user:', userError);
-    window.location.href = '/login.html';
+    console.error("Error loading user:", userError);
+    window.location.href = "/login.html";
     return;
   }
 
   currentUser = user;
-  document.getElementById('user-email').textContent = user.email;
+  document.getElementById("user-email").textContent = user.email;
 
   // Get user's boats
   const { boats, error: boatsError } = await getUserBoats(currentUser.id);
   if (boatsError) {
-    console.error('Error loading boats:', boatsError);
+    console.error("Error loading boats:", boatsError);
     return;
   }
 
   if (boats.length === 0) {
-    showEmptyState('No boats found. Please contact support to link your boat.');
+    showEmptyState("No boats found. Please contact support to link your boat.");
     return;
   }
 
   // Get current boat
-  const savedBoatId = localStorage.getItem('currentBoatId');
-  const boat = boats.find(b => b.id === savedBoatId) || boats[0];
+  const savedBoatId = localStorage.getItem("currentBoatId");
+  const boat = boats.find((b) => b.id === savedBoatId) || boats[0];
   currentBoatId = boat.id;
 
   // Load data
@@ -82,11 +88,12 @@ async function init() {
  * Load conversation data
  */
 async function loadData() {
-  const { conversations: convos, error } = await loadConversations(currentBoatId);
+  const { conversations: convos, error } =
+    await loadConversations(currentBoatId);
 
   if (error) {
-    console.error('Error loading conversations:', error);
-    showError('Failed to load conversations. Please try again.');
+    console.error("Error loading conversations:", error);
+    showError("Failed to load conversations. Please try again.");
     return;
   }
 
@@ -103,7 +110,7 @@ async function loadData() {
  * Render conversation list
  */
 function renderConversations() {
-  const container = document.getElementById('conversation-list');
+  const container = document.getElementById("conversation-list");
 
   if (conversations.length === 0) {
     container.innerHTML = `
@@ -114,12 +121,15 @@ function renderConversations() {
     return;
   }
 
-  container.innerHTML = conversations.map(convo => {
-    const lastMessage = convo.messages[0]; // Already sorted desc
-    const title = convo.service_log_id ? `Service #${convo.service_log_id.substring(0, 8)}` : 'General';
+  container.innerHTML = conversations
+    .map((convo) => {
+      const lastMessage = convo.messages[0]; // Already sorted desc
+      const title = convo.service_log_id
+        ? `Service #${convo.service_log_id.substring(0, 8)}`
+        : "General";
 
-    return `
-      <div class="conversation-item ${convo.id === selectedConversationId ? 'active' : ''}"
+      return `
+      <div class="conversation-item ${convo.id === selectedConversationId ? "active" : ""}"
            data-conversation-id="${convo.id}"
            onclick="selectConversation('${convo.id}')">
         <div class="conversation-header">
@@ -128,31 +138,32 @@ function renderConversations() {
         </div>
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <div class="conversation-preview">${lastMessage.message_text}</div>
-          ${convo.unread_count > 0 ? `<span class="unread-badge">${convo.unread_count}</span>` : ''}
+          ${convo.unread_count > 0 ? `<span class="unread-badge">${convo.unread_count}</span>` : ""}
         </div>
       </div>
     `;
-  }).join('');
+    })
+    .join("");
 }
 
 /**
  * Select a conversation
  * @param {string} conversationId - Conversation ID
  */
-window.selectConversation = async function(conversationId) {
+window.selectConversation = async function (conversationId) {
   selectedConversationId = conversationId;
 
   // Update UI
   renderConversations();
 
   // Load thread
-  const conversation = conversations.find(c => c.id === conversationId);
+  const conversation = conversations.find((c) => c.id === conversationId);
   const serviceLogId = conversation?.service_log_id || null;
 
   const { messages, error } = await loadThread(currentBoatId, serviceLogId);
 
   if (error) {
-    console.error('Error loading thread:', error);
+    console.error("Error loading thread:", error);
     return;
   }
 
@@ -161,8 +172,8 @@ window.selectConversation = async function(conversationId) {
 
   // Mark admin messages as read
   const unreadIds = messages
-    .filter(m => m.sender_type === 'admin' && !m.read_at)
-    .map(m => m.id);
+    .filter((m) => m.sender_type === "admin" && !m.read_at)
+    .map((m) => m.id);
 
   if (unreadIds.length > 0) {
     await markAsRead(unreadIds);
@@ -175,19 +186,21 @@ window.selectConversation = async function(conversationId) {
  * Render message thread
  */
 function renderThread() {
-  const container = document.getElementById('message-thread');
+  const container = document.getElementById("message-thread");
 
-  const conversation = conversations.find(c => c.id === selectedConversationId);
+  const conversation = conversations.find(
+    (c) => c.id === selectedConversationId,
+  );
   const title = conversation?.service_log_id
     ? `Service #${conversation.service_log_id.substring(0, 8)}`
-    : 'General Conversation';
+    : "General Conversation";
 
   container.innerHTML = `
     <div class="thread-header">
       <h3>${title}</h3>
     </div>
     <div class="messages-scroll" id="messages-scroll">
-      ${currentMessages.map(message => renderMessage(message)).join('')}
+      ${currentMessages.map((message) => renderMessage(message)).join("")}
     </div>
     <div class="message-composer">
       <form class="composer-form" id="composer-form">
@@ -208,7 +221,7 @@ function renderThread() {
 
   // Scroll to bottom
   setTimeout(() => {
-    const scrollContainer = document.getElementById('messages-scroll');
+    const scrollContainer = document.getElementById("messages-scroll");
     if (scrollContainer) {
       scrollContainer.scrollTop = scrollContainer.scrollHeight;
     }
@@ -231,21 +244,27 @@ function renderMessage(message) {
     <div class="message-bubble ${senderClass}">
       <div class="message-content">
         <div class="message-text">${escapeHtml(message.message_text)}</div>
-        ${attachments.length > 0 ? `
+        ${
+          attachments.length > 0
+            ? `
           <div class="message-attachments">
-            ${attachments.map(att => {
-              if (isImage(att.type)) {
-                return `<img src="${att.url}" alt="${att.filename}" class="attachment-image">`;
-              } else {
-                return `
+            ${attachments
+              .map((att) => {
+                if (isImage(att.type)) {
+                  return `<img src="${att.url}" alt="${att.filename}" class="attachment-image">`;
+                } else {
+                  return `
                   <a href="${att.url}" target="_blank" class="attachment-item">
                     📎 ${att.filename} (${formatFileSize(att.size)})
                   </a>
                 `;
-              }
-            }).join('')}
+                }
+              })
+              .join("")}
           </div>
-        ` : ''}
+        `
+            : ""
+        }
       </div>
       <div class="message-time">${formatMessageTime(message.created_at)}</div>
     </div>
@@ -256,17 +275,17 @@ function renderMessage(message) {
  * Setup composer event listeners
  */
 function setupComposerListeners() {
-  const form = document.getElementById('composer-form');
-  const attachBtn = document.getElementById('attach-btn');
-  const fileInput = document.getElementById('file-input');
+  const form = document.getElementById("composer-form");
+  const attachBtn = document.getElementById("attach-btn");
+  const fileInput = document.getElementById("file-input");
 
-  form.addEventListener('submit', handleSendMessage);
+  form.addEventListener("submit", handleSendMessage);
 
-  attachBtn.addEventListener('click', () => {
+  attachBtn.addEventListener("click", () => {
     fileInput.click();
   });
 
-  fileInput.addEventListener('change', (e) => {
+  fileInput.addEventListener("change", (e) => {
     selectedFiles = Array.from(e.target.files);
     updateSelectedFilesDisplay();
   });
@@ -279,7 +298,7 @@ function setupComposerListeners() {
 async function handleSendMessage(e) {
   e.preventDefault();
 
-  const input = document.getElementById('message-input');
+  const input = document.getElementById("message-input");
   const messageText = input.value.trim();
 
   if (!messageText && selectedFiles.length === 0) {
@@ -289,7 +308,7 @@ async function handleSendMessage(e) {
   // Disable form
   const submitBtn = e.target.querySelector('button[type="submit"]');
   submitBtn.disabled = true;
-  submitBtn.textContent = 'Sending...';
+  submitBtn.textContent = "Sending...";
 
   try {
     // Upload attachments first
@@ -297,7 +316,7 @@ async function handleSendMessage(e) {
     for (const file of selectedFiles) {
       const { attachment, error } = await uploadAttachment(file, currentBoatId);
       if (error) {
-        console.error('Error uploading file:', error);
+        console.error("Error uploading file:", error);
         alert(`Failed to upload ${file.name}: ${error}`);
         continue;
       }
@@ -305,7 +324,9 @@ async function handleSendMessage(e) {
     }
 
     // Send message
-    const conversation = conversations.find(c => c.id === selectedConversationId);
+    const conversation = conversations.find(
+      (c) => c.id === selectedConversationId,
+    );
     const serviceLogId = conversation?.service_log_id || null;
 
     const { message, error } = await sendMessage(
@@ -313,31 +334,30 @@ async function handleSendMessage(e) {
       messageText,
       currentUser.id,
       attachments,
-      serviceLogId
+      serviceLogId,
     );
 
     if (error) {
-      console.error('Error sending message:', error);
-      alert('Failed to send message. Please try again.');
+      console.error("Error sending message:", error);
+      alert("Failed to send message. Please try again.");
       return;
     }
 
     // Clear form
-    input.value = '';
+    input.value = "";
     selectedFiles = [];
-    document.getElementById('file-input').value = '';
+    document.getElementById("file-input").value = "";
     updateSelectedFilesDisplay();
 
     // Add message to UI (will also come via realtime, but this is faster)
     currentMessages.push(message);
     renderThread();
-
   } catch (error) {
-    console.error('Send message error:', error);
-    alert('Failed to send message. Please try again.');
+    console.error("Send message error:", error);
+    alert("Failed to send message. Please try again.");
   } finally {
     submitBtn.disabled = false;
-    submitBtn.textContent = 'Send';
+    submitBtn.textContent = "Send";
   }
 }
 
@@ -345,9 +365,9 @@ async function handleSendMessage(e) {
  * Update selected files display
  */
 function updateSelectedFilesDisplay() {
-  const display = document.getElementById('selected-files');
+  const display = document.getElementById("selected-files");
   if (selectedFiles.length === 0) {
-    display.textContent = '';
+    display.textContent = "";
   } else {
     display.textContent = `${selectedFiles.length} file(s) selected`;
   }
@@ -363,38 +383,43 @@ function setupRealtime() {
   }
 
   // Subscribe to new messages
-  messageSubscription = subscribeToMessages(currentBoatId, async (newMessage) => {
-    console.log('New message received:', newMessage);
+  messageSubscription = subscribeToMessages(
+    currentBoatId,
+    async (newMessage) => {
+      console.log("New message received:", newMessage);
 
-    // Update conversations list
-    await loadData();
+      // Update conversations list
+      await loadData();
 
-    // If message is for current thread, add it
-    const conversation = conversations.find(c => c.id === selectedConversationId);
-    if (conversation) {
-      const inCurrentThread =
-        (newMessage.service_log_id === conversation.service_log_id) ||
-        (!newMessage.service_log_id && !conversation.service_log_id);
+      // If message is for current thread, add it
+      const conversation = conversations.find(
+        (c) => c.id === selectedConversationId,
+      );
+      if (conversation) {
+        const inCurrentThread =
+          newMessage.service_log_id === conversation.service_log_id ||
+          (!newMessage.service_log_id && !conversation.service_log_id);
 
-      if (inCurrentThread) {
-        currentMessages.push(newMessage);
-        renderThread();
+        if (inCurrentThread) {
+          currentMessages.push(newMessage);
+          renderThread();
 
-        // Mark as read if from admin
-        if (newMessage.sender_type === 'admin') {
-          await markAsRead([newMessage.id]);
+          // Mark as read if from admin
+          if (newMessage.sender_type === "admin") {
+            await markAsRead([newMessage.id]);
+          }
         }
       }
-    }
 
-    // Update unread count
-    await updateUnreadCount();
+      // Update unread count
+      await updateUnreadCount();
 
-    // Play notification sound (optional)
-    if (newMessage.sender_type === 'admin') {
-      playNotificationSound();
-    }
-  });
+      // Play notification sound (optional)
+      if (newMessage.sender_type === "admin") {
+        playNotificationSound();
+      }
+    },
+  );
 }
 
 /**
@@ -404,16 +429,16 @@ async function updateUnreadCount() {
   const { count, error } = await getUnreadCount(currentBoatId);
 
   if (error) {
-    console.error('Error getting unread count:', error);
+    console.error("Error getting unread count:", error);
     return;
   }
 
-  const badge = document.getElementById('unread-badge');
+  const badge = document.getElementById("unread-badge");
   if (count > 0) {
     badge.textContent = count;
-    badge.style.display = 'block';
+    badge.style.display = "block";
   } else {
-    badge.style.display = 'none';
+    badge.style.display = "none";
   }
 }
 
@@ -431,7 +456,7 @@ function playNotificationSound() {
  * @param {string} message - Message to display
  */
 function showEmptyState(message) {
-  const container = document.getElementById('conversation-list');
+  const container = document.getElementById("conversation-list");
   container.innerHTML = `
     <div class="empty-state">
       <p>${message}</p>
@@ -444,7 +469,7 @@ function showEmptyState(message) {
  * @param {string} message - Error message
  */
 function showError(message) {
-  const container = document.getElementById('conversation-list');
+  const container = document.getElementById("conversation-list");
   container.innerHTML = `
     <div class="empty-state">
       <p style="color: var(--ss-error-600);">${message}</p>
@@ -458,7 +483,7 @@ function showError(message) {
  * @returns {string}
  */
 function escapeHtml(text) {
-  const div = document.createElement('div');
+  const div = document.createElement("div");
   div.textContent = text;
   return div.innerHTML;
 }
@@ -468,14 +493,14 @@ function escapeHtml(text) {
  */
 function setupEventListeners() {
   // Logout button
-  document.getElementById('logout-btn').addEventListener('click', async () => {
+  document.getElementById("logout-btn").addEventListener("click", async () => {
     const { success } = await logout();
     if (success) {
       // Cleanup
       if (messageSubscription) {
         await unsubscribeFromMessages(messageSubscription);
       }
-      window.location.href = '/login.html';
+      window.location.href = "/login.html";
     }
   });
 }
@@ -484,7 +509,7 @@ function setupEventListeners() {
 init();
 
 // Cleanup on page unload
-window.addEventListener('beforeunload', async () => {
+window.addEventListener("beforeunload", async () => {
   if (messageSubscription) {
     await unsubscribeFromMessages(messageSubscription);
   }

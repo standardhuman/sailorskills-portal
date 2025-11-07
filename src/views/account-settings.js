@@ -3,7 +3,12 @@
  * Handles account management, profile updates, and preferences
  */
 
-import { requireAuth, getCurrentUser, logout } from '../auth/auth.js';
+import {
+  requireAuth,
+  getCurrentUser,
+  getEffectiveUser,
+  logout,
+} from "../auth/auth.js";
 import {
   getAccountInfo,
   getCustomerInfo,
@@ -17,13 +22,13 @@ import {
   deleteAccount,
   formatPhoneNumber,
   isValidEmail,
-  validatePassword
-} from '../api/account.js';
+  validatePassword,
+} from "../api/account.js";
 
 // Require authentication
 const isAuth = await requireAuth();
 if (!isAuth) {
-  throw new Error('Not authenticated');
+  throw new Error("Not authenticated");
 }
 
 // State
@@ -36,15 +41,15 @@ let currentBoatId = null;
  */
 async function init() {
   // Get current user
-  const { user, error: userError } = await getCurrentUser();
+  const { user, error: userError } = await getEffectiveUser();
   if (userError || !user) {
-    console.error('Error loading user:', userError);
-    window.location.href = '/login.html';
+    console.error("Error loading user:", userError);
+    window.location.href = "/login.html";
     return;
   }
 
   currentUser = user;
-  document.getElementById('user-email').textContent = user.email;
+  document.getElementById("user-email").textContent = user.email;
 
   // Load account data
   await loadAccountInfo();
@@ -63,13 +68,13 @@ async function loadAccountInfo() {
   const { account, error } = await getAccountInfo();
 
   if (error) {
-    console.error('Error loading account:', error);
+    console.error("Error loading account:", error);
     return;
   }
 
   // Pre-fill email
   if (account) {
-    document.getElementById('email').value = account.email || currentUser.email;
+    document.getElementById("email").value = account.email || currentUser.email;
   }
 }
 
@@ -80,13 +85,13 @@ async function loadCustomerInfo() {
   const { customer, error } = await getCustomerInfo();
 
   if (error) {
-    console.error('Error loading customer info:', error);
+    console.error("Error loading customer info:", error);
     return;
   }
 
   // Pre-fill phone
   if (customer) {
-    document.getElementById('phone').value = customer.phone || '';
+    document.getElementById("phone").value = customer.phone || "";
   }
 }
 
@@ -97,7 +102,7 @@ async function loadNotificationPreferences() {
   const { preferences, error } = await getNotificationPreferences();
 
   if (error) {
-    console.error('Error loading preferences:', error);
+    console.error("Error loading preferences:", error);
     return;
   }
 
@@ -106,17 +111,17 @@ async function loadNotificationPreferences() {
     new_invoice: true,
     upcoming_service: true,
     new_message: true,
-    reminder_days_before: 3
+    reminder_days_before: 3,
   };
 
   // Update UI toggles
-  Object.keys(currentPreferences).forEach(key => {
-    if (key === 'reminder_days_before') {
-      document.getElementById('reminder-days').value = currentPreferences[key];
+  Object.keys(currentPreferences).forEach((key) => {
+    if (key === "reminder_days_before") {
+      document.getElementById("reminder-days").value = currentPreferences[key];
     } else {
       const toggle = document.querySelector(`[data-pref="${key}"]`);
       if (toggle && currentPreferences[key]) {
-        toggle.classList.add('active');
+        toggle.classList.add("active");
       }
     }
   });
@@ -129,38 +134,43 @@ async function loadBoats() {
   const { boats, error } = await getAccessibleBoats();
 
   if (error) {
-    console.error('Error loading boats:', error);
+    console.error("Error loading boats:", error);
     return;
   }
 
-  const container = document.getElementById('boat-selector');
+  const container = document.getElementById("boat-selector");
 
   if (boats.length === 0) {
-    container.innerHTML = '<p class="form-help">No boats found. Contact support to link your boat.</p>';
+    container.innerHTML =
+      '<p class="form-help">No boats found. Contact support to link your boat.</p>';
     return;
   }
 
   // Get current boat from localStorage
-  currentBoatId = localStorage.getItem('currentBoatId') || boats[0]?.boat?.id;
+  currentBoatId = localStorage.getItem("currentBoatId") || boats[0]?.boat?.id;
 
-  container.innerHTML = boats.map(access => {
-    const boat = access.boat;
-    const isActive = boat.id === currentBoatId;
+  container.innerHTML = boats
+    .map((access) => {
+      const boat = access.boat;
+      const isActive = boat.id === currentBoatId;
 
-    return `
-      <div class="boat-option ${isActive ? 'active' : ''}" data-boat-id="${boat.id}">
+      return `
+      <div class="boat-option ${isActive ? "active" : ""}" data-boat-id="${boat.id}">
         <div class="boat-name">${boat.name}</div>
         <div class="boat-details">
-          ${boat.year || ''} ${boat.make || ''} ${boat.model || ''}
-          ${access.is_primary ? ' • Primary Contact' : ''}
+          ${boat.year || ""} ${boat.make || ""} ${boat.model || ""}
+          ${access.is_primary ? " • Primary Contact" : ""}
         </div>
       </div>
     `;
-  }).join('');
+    })
+    .join("");
 
   // Add click handlers
-  document.querySelectorAll('.boat-option').forEach(option => {
-    option.addEventListener('click', () => handleBoatSwitch(option.dataset.boatId));
+  document.querySelectorAll(".boat-option").forEach((option) => {
+    option.addEventListener("click", () =>
+      handleBoatSwitch(option.dataset.boatId),
+    );
   });
 }
 
@@ -169,29 +179,37 @@ async function loadBoats() {
  */
 function setupEventListeners() {
   // Logout button
-  document.getElementById('logout-btn').addEventListener('click', async () => {
+  document.getElementById("logout-btn").addEventListener("click", async () => {
     const { success } = await logout();
     if (success) {
-      window.location.href = '/login.html';
+      window.location.href = "/login.html";
     }
   });
 
   // Profile form
-  document.getElementById('profile-form').addEventListener('submit', handleProfileSubmit);
+  document
+    .getElementById("profile-form")
+    .addEventListener("submit", handleProfileSubmit);
 
   // Password form
-  document.getElementById('password-form').addEventListener('submit', handlePasswordSubmit);
+  document
+    .getElementById("password-form")
+    .addEventListener("submit", handlePasswordSubmit);
 
   // Notification toggles
-  document.querySelectorAll('.toggle-switch').forEach(toggle => {
-    toggle.addEventListener('click', () => handleToggle(toggle));
+  document.querySelectorAll(".toggle-switch").forEach((toggle) => {
+    toggle.addEventListener("click", () => handleToggle(toggle));
   });
 
   // Reminder days input
-  document.getElementById('reminder-days').addEventListener('change', handleReminderDaysChange);
+  document
+    .getElementById("reminder-days")
+    .addEventListener("change", handleReminderDaysChange);
 
   // Delete account button
-  document.getElementById('delete-account-btn').addEventListener('click', handleDeleteAccount);
+  document
+    .getElementById("delete-account-btn")
+    .addEventListener("click", handleDeleteAccount);
 }
 
 /**
@@ -202,8 +220,8 @@ async function handleProfileSubmit(event) {
   hideAllAlerts();
   hideAllErrors();
 
-  const newEmail = document.getElementById('email').value.trim();
-  const newPhone = document.getElementById('phone').value.trim();
+  const newEmail = document.getElementById("email").value.trim();
+  const newPhone = document.getElementById("phone").value.trim();
 
   let hasChanges = false;
   let hasErrors = false;
@@ -211,7 +229,7 @@ async function handleProfileSubmit(event) {
   // Validate email
   if (newEmail !== currentUser.email) {
     if (!isValidEmail(newEmail)) {
-      showFieldError('email-error', 'Please enter a valid email address');
+      showFieldError("email-error", "Please enter a valid email address");
       hasErrors = true;
     } else {
       hasChanges = true;
@@ -223,15 +241,15 @@ async function handleProfileSubmit(event) {
   }
 
   if (!hasChanges && !newPhone) {
-    showInfo('No changes to save');
+    showInfo("No changes to save");
     return;
   }
 
   // Disable submit button
-  const submitBtn = document.getElementById('save-profile-btn');
+  const submitBtn = document.getElementById("save-profile-btn");
   const originalText = submitBtn.textContent;
   submitBtn.disabled = true;
-  submitBtn.textContent = 'Saving...';
+  submitBtn.textContent = "Saving...";
 
   try {
     // Update email if changed
@@ -240,7 +258,11 @@ async function handleProfileSubmit(event) {
       if (error) {
         throw new Error(`Failed to update email: ${error}`);
       }
-      showInfo('Verification email sent to ' + newEmail + '. Please check your inbox to confirm the change.');
+      showInfo(
+        "Verification email sent to " +
+          newEmail +
+          ". Please check your inbox to confirm the change.",
+      );
     }
 
     // Update phone
@@ -252,12 +274,11 @@ async function handleProfileSubmit(event) {
     }
 
     if (!newEmail || newEmail === currentUser.email) {
-      showSuccess('Profile updated successfully');
+      showSuccess("Profile updated successfully");
     }
-
   } catch (error) {
-    console.error('Profile update error:', error);
-    showError(error.message || 'Failed to update profile');
+    console.error("Profile update error:", error);
+    showError(error.message || "Failed to update profile");
   } finally {
     submitBtn.disabled = false;
     submitBtn.textContent = originalText;
@@ -272,27 +293,27 @@ async function handlePasswordSubmit(event) {
   hideAllAlerts();
   hideAllErrors();
 
-  const newPassword = document.getElementById('new-password').value;
-  const confirmPassword = document.getElementById('confirm-password').value;
+  const newPassword = document.getElementById("new-password").value;
+  const confirmPassword = document.getElementById("confirm-password").value;
 
   // Validate password
   const validation = validatePassword(newPassword);
   if (!validation.valid) {
-    showFieldError('password-error', validation.message);
+    showFieldError("password-error", validation.message);
     return;
   }
 
   // Confirm passwords match
   if (newPassword !== confirmPassword) {
-    showFieldError('confirm-password-error', 'Passwords do not match');
+    showFieldError("confirm-password-error", "Passwords do not match");
     return;
   }
 
   // Disable submit button
-  const submitBtn = document.getElementById('save-password-btn');
+  const submitBtn = document.getElementById("save-password-btn");
   const originalText = submitBtn.textContent;
   submitBtn.disabled = true;
-  submitBtn.textContent = 'Changing Password...';
+  submitBtn.textContent = "Changing Password...";
 
   try {
     const { error } = await changePassword(newPassword);
@@ -302,12 +323,12 @@ async function handlePasswordSubmit(event) {
     }
 
     // Clear form
-    document.getElementById('password-form').reset();
+    document.getElementById("password-form").reset();
 
-    showSuccess('Password changed successfully');
+    showSuccess("Password changed successfully");
   } catch (error) {
-    console.error('Password change error:', error);
-    showError(error.message || 'Failed to change password');
+    console.error("Password change error:", error);
+    showError(error.message || "Failed to change password");
   } finally {
     submitBtn.disabled = false;
     submitBtn.textContent = originalText;
@@ -321,10 +342,10 @@ async function handleToggle(toggle) {
   const pref = toggle.dataset.pref;
 
   // Toggle UI
-  toggle.classList.toggle('active');
+  toggle.classList.toggle("active");
 
   // Update preferences
-  currentPreferences[pref] = toggle.classList.contains('active');
+  currentPreferences[pref] = toggle.classList.contains("active");
 
   // Save to database
   await saveNotificationPreferences();
@@ -354,8 +375,8 @@ async function saveNotificationPreferences() {
   const { error } = await updateNotificationPreferences(currentPreferences);
 
   if (error) {
-    console.error('Error saving preferences:', error);
-    showError('Failed to save notification preferences');
+    console.error("Error saving preferences:", error);
+    showError("Failed to save notification preferences");
   }
 }
 
@@ -370,18 +391,20 @@ async function handleBoatSwitch(boatId) {
   const { success, error } = await switchCurrentBoat(boatId);
 
   if (error) {
-    showError('Failed to switch boat: ' + error);
+    showError("Failed to switch boat: " + error);
     return;
   }
 
   // Update UI
-  document.querySelectorAll('.boat-option').forEach(option => {
-    option.classList.toggle('active', option.dataset.boatId === boatId);
+  document.querySelectorAll(".boat-option").forEach((option) => {
+    option.classList.toggle("active", option.dataset.boatId === boatId);
   });
 
   currentBoatId = boatId;
 
-  showSuccess('Switched to selected boat. Refresh the page to see updated data.');
+  showSuccess(
+    "Switched to selected boat. Refresh the page to see updated data.",
+  );
 }
 
 /**
@@ -389,9 +412,9 @@ async function handleBoatSwitch(boatId) {
  */
 async function handleDeleteAccount() {
   const confirmed = confirm(
-    'Are you sure you want to delete your account?\n\n' +
-    'This action cannot be undone. You will lose access to all your data.\n\n' +
-    'Click OK to proceed with deletion, or Cancel to keep your account.'
+    "Are you sure you want to delete your account?\n\n" +
+      "This action cannot be undone. You will lose access to all your data.\n\n" +
+      "Click OK to proceed with deletion, or Cancel to keep your account.",
   );
 
   if (!confirmed) {
@@ -400,9 +423,9 @@ async function handleDeleteAccount() {
 
   // Second confirmation
   const doubleConfirm = confirm(
-    'This is your final warning.\n\n' +
-    'Deleting your account will permanently remove all your data.\n\n' +
-    'Are you absolutely sure?'
+    "This is your final warning.\n\n" +
+      "Deleting your account will permanently remove all your data.\n\n" +
+      "Are you absolutely sure?",
   );
 
   if (!doubleConfirm) {
@@ -417,10 +440,10 @@ async function handleDeleteAccount() {
     }
 
     // Redirect to login
-    window.location.href = '/login.html?message=account-deleted';
+    window.location.href = "/login.html?message=account-deleted";
   } catch (error) {
-    console.error('Delete account error:', error);
-    showError('Failed to delete account. Please contact support.');
+    console.error("Delete account error:", error);
+    showError("Failed to delete account. Please contact support.");
   }
 }
 
@@ -431,7 +454,7 @@ function showFieldError(errorId, message) {
   const errorElement = document.getElementById(errorId);
   if (errorElement) {
     errorElement.textContent = message;
-    errorElement.classList.add('visible');
+    errorElement.classList.add("visible");
   }
 }
 
@@ -439,8 +462,8 @@ function showFieldError(errorId, message) {
  * Hide all field errors
  */
 function hideAllErrors() {
-  document.querySelectorAll('.form-error').forEach(error => {
-    error.classList.remove('visible');
+  document.querySelectorAll(".form-error").forEach((error) => {
+    error.classList.remove("visible");
   });
 }
 
@@ -448,14 +471,14 @@ function hideAllErrors() {
  * Show success alert
  */
 function showSuccess(message) {
-  const alert = document.getElementById('success-alert');
+  const alert = document.getElementById("success-alert");
   alert.textContent = message;
-  alert.classList.add('visible');
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  alert.classList.add("visible");
+  window.scrollTo({ top: 0, behavior: "smooth" });
 
   // Auto-hide after 5 seconds
   setTimeout(() => {
-    alert.classList.remove('visible');
+    alert.classList.remove("visible");
   }, 5000);
 }
 
@@ -463,24 +486,24 @@ function showSuccess(message) {
  * Show error alert
  */
 function showError(message) {
-  const alert = document.getElementById('error-alert');
+  const alert = document.getElementById("error-alert");
   alert.textContent = message;
-  alert.classList.add('visible');
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  alert.classList.add("visible");
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 /**
  * Show info alert
  */
 function showInfo(message) {
-  const alert = document.getElementById('info-alert');
+  const alert = document.getElementById("info-alert");
   alert.textContent = message;
-  alert.classList.add('visible');
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  alert.classList.add("visible");
+  window.scrollTo({ top: 0, behavior: "smooth" });
 
   // Auto-hide after 5 seconds
   setTimeout(() => {
-    alert.classList.remove('visible');
+    alert.classList.remove("visible");
   }, 5000);
 }
 
@@ -488,9 +511,9 @@ function showInfo(message) {
  * Hide all alerts
  */
 function hideAllAlerts() {
-  document.getElementById('success-alert').classList.remove('visible');
-  document.getElementById('error-alert').classList.remove('visible');
-  document.getElementById('info-alert').classList.remove('visible');
+  document.getElementById("success-alert").classList.remove("visible");
+  document.getElementById("error-alert").classList.remove("visible");
+  document.getElementById("info-alert").classList.remove("visible");
 }
 
 // Initialize page

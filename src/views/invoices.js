@@ -3,7 +3,13 @@
  * Displays invoice history and payment management
  */
 
-import { requireAuth, getCurrentUser, getUserBoats, logout } from '../auth/auth.js';
+import {
+  requireAuth,
+  getCurrentUser,
+  getEffectiveUser,
+  getUserBoats,
+  logout,
+} from "../auth/auth.js";
 import {
   loadInvoices,
   getInvoiceStats,
@@ -11,13 +17,13 @@ import {
   formatDate,
   getStatusClass,
   getStatusText,
-  calculateCategoryTotals
-} from '../api/invoices.js';
+  calculateCategoryTotals,
+} from "../api/invoices.js";
 
 // Require authentication
 const isAuth = await requireAuth();
 if (!isAuth) {
-  throw new Error('Not authenticated');
+  throw new Error("Not authenticated");
 }
 
 // State
@@ -32,31 +38,31 @@ let filteredInvoices = [];
  */
 async function init() {
   // Get current user
-  const { user, error: userError } = await getCurrentUser();
+  const { user, error: userError } = await getEffectiveUser();
   if (userError || !user) {
-    console.error('Error loading user:', userError);
-    window.location.href = '/login.html';
+    console.error("Error loading user:", userError);
+    window.location.href = "/login.html";
     return;
   }
 
   currentUser = user;
-  document.getElementById('user-email').textContent = user.email;
+  document.getElementById("user-email").textContent = user.email;
 
   // Get user's boats
   const { boats, error: boatsError } = await getUserBoats(currentUser.id);
   if (boatsError) {
-    console.error('Error loading boats:', boatsError);
+    console.error("Error loading boats:", boatsError);
     return;
   }
 
   if (boats.length === 0) {
-    showEmptyState('No boats found. Please contact support to link your boat.');
+    showEmptyState("No boats found. Please contact support to link your boat.");
     return;
   }
 
   // Get current boat (from localStorage or first boat)
-  const savedBoatId = localStorage.getItem('currentBoatId');
-  const boat = boats.find(b => b.id === savedBoatId) || boats[0];
+  const savedBoatId = localStorage.getItem("currentBoatId");
+  const boat = boats.find((b) => b.id === savedBoatId) || boats[0];
   currentBoatId = boat.id;
   currentCustomerId = boat.customer_id;
 
@@ -82,17 +88,20 @@ async function loadData() {
  * Load invoice statistics
  */
 async function loadStats() {
-  const { stats, error } = await getInvoiceStats(currentBoatId, currentCustomerId);
+  const { stats, error } = await getInvoiceStats(
+    currentBoatId,
+    currentCustomerId,
+  );
 
   if (error) {
-    console.error('Error loading stats:', error);
+    console.error("Error loading stats:", error);
     return;
   }
 
   if (!stats) return;
 
   // Update stats display
-  const statsRow = document.getElementById('stats-row');
+  const statsRow = document.getElementById("stats-row");
   statsRow.innerHTML = `
     <div class="stat-card">
       <h4>Total Invoices</h4>
@@ -113,11 +122,14 @@ async function loadStats() {
  * Load invoice list
  */
 async function loadInvoiceList() {
-  const { invoices, error } = await loadInvoices(currentBoatId, currentCustomerId);
+  const { invoices, error } = await loadInvoices(
+    currentBoatId,
+    currentCustomerId,
+  );
 
   if (error) {
-    console.error('Error loading invoices:', error);
-    showError('Failed to load invoices. Please try again.');
+    console.error("Error loading invoices:", error);
+    showError("Failed to load invoices. Please try again.");
     return;
   }
 
@@ -131,15 +143,16 @@ async function loadInvoiceList() {
  * Render invoice list
  */
 function renderInvoices() {
-  const container = document.getElementById('invoice-list');
+  const container = document.getElementById("invoice-list");
 
   if (filteredInvoices.length === 0) {
-    showEmptyState('No invoices found.');
+    showEmptyState("No invoices found.");
     return;
   }
 
-  container.innerHTML = filteredInvoices.map(invoice => {
-    return `
+  container.innerHTML = filteredInvoices
+    .map((invoice) => {
+      return `
       <div class="invoice-item" data-invoice-id="${invoice.id}">
         <div class="invoice-header" onclick="toggleInvoiceDetails('${invoice.id}')">
           <div class="invoice-info">
@@ -154,51 +167,66 @@ function renderInvoices() {
         </div>
 
         <div class="invoice-details" id="details-${invoice.id}">
-          ${invoice.service_details ? `
+          ${
+            invoice.service_details
+              ? `
             <div style="margin-bottom: var(--ss-space-md);">
               <strong>Service Details:</strong><br>
-              ${invoice.service_details.description || 'No description available'}
+              ${invoice.service_details.description || "No description available"}
             </div>
-          ` : '<p>No service details available.</p>'}
+          `
+              : "<p>No service details available.</p>"
+          }
 
-          ${invoice.paid_at ? `
+          ${
+            invoice.paid_at
+              ? `
             <div class="payment-info">
               <strong>Payment Details:</strong><br>
               Paid on ${formatDate(invoice.paid_at)}
-              ${invoice.payment_method ? ` via ${invoice.payment_method.charAt(0).toUpperCase() + invoice.payment_method.slice(1)}` : ''}
-              ${invoice.payment_reference ? ` (Ref: ${invoice.payment_reference})` : ''}
+              ${invoice.payment_method ? ` via ${invoice.payment_method.charAt(0).toUpperCase() + invoice.payment_method.slice(1)}` : ""}
+              ${invoice.payment_reference ? ` (Ref: ${invoice.payment_reference})` : ""}
             </div>
-          ` : invoice.status === 'pending' || invoice.status === 'overdue' ? `
+          `
+              : invoice.status === "pending" || invoice.status === "overdue"
+                ? `
             <div class="payment-info">
-              <strong>Due Date:</strong> ${invoice.due_at ? formatDate(invoice.due_at) : 'Upon receipt'}
+              <strong>Due Date:</strong> ${invoice.due_at ? formatDate(invoice.due_at) : "Upon receipt"}
             </div>
-          ` : ''}
+          `
+                : ""
+          }
 
-          ${invoice.notes ? `
+          ${
+            invoice.notes
+              ? `
             <div style="margin-top: var(--ss-space-sm); font-size: var(--ss-font-size-xs); color: var(--ss-neutral-600);">
               <strong>Notes:</strong> ${invoice.notes}
             </div>
-          ` : ''}
+          `
+              : ""
+          }
         </div>
       </div>
     `;
-  }).join('');
+    })
+    .join("");
 }
 
 /**
  * Toggle invoice details
  * @param {string} invoiceId - Invoice ID
  */
-window.toggleInvoiceDetails = function(invoiceId) {
+window.toggleInvoiceDetails = function (invoiceId) {
   const details = document.getElementById(`details-${invoiceId}`);
   const icon = document.getElementById(`expand-${invoiceId}`);
 
-  if (details.classList.contains('expanded')) {
-    details.classList.remove('expanded');
-    icon.classList.remove('expanded');
+  if (details.classList.contains("expanded")) {
+    details.classList.remove("expanded");
+    icon.classList.remove("expanded");
   } else {
-    details.classList.add('expanded');
-    icon.classList.add('expanded');
+    details.classList.add("expanded");
+    icon.classList.add("expanded");
   }
 };
 
@@ -206,17 +234,17 @@ window.toggleInvoiceDetails = function(invoiceId) {
  * Apply filters
  */
 function applyFilters() {
-  const statusFilter = document.getElementById('status-filter').value;
-  const dateRange = document.getElementById('date-range').value;
+  const statusFilter = document.getElementById("status-filter").value;
+  const dateRange = document.getElementById("date-range").value;
 
-  filteredInvoices = allInvoices.filter(invoice => {
+  filteredInvoices = allInvoices.filter((invoice) => {
     // Status filter
     if (statusFilter && invoice.status !== statusFilter) {
       return false;
     }
 
     // Date range filter
-    if (dateRange !== 'all') {
+    if (dateRange !== "all") {
       const days = parseInt(dateRange);
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - days);
@@ -237,7 +265,7 @@ function applyFilters() {
  * @param {string} message - Message to display
  */
 function showEmptyState(message) {
-  const container = document.getElementById('invoice-list');
+  const container = document.getElementById("invoice-list");
   container.innerHTML = `
     <div class="empty-state">
       <p>${message}</p>
@@ -250,7 +278,7 @@ function showEmptyState(message) {
  * @param {string} message - Error message
  */
 function showError(message) {
-  const container = document.getElementById('invoice-list');
+  const container = document.getElementById("invoice-list");
   container.innerHTML = `
     <div class="empty-state">
       <p style="color: var(--ss-error-600);">${message}</p>
@@ -263,22 +291,30 @@ function showError(message) {
  */
 function setupEventListeners() {
   // Logout button
-  document.getElementById('logout-btn').addEventListener('click', async () => {
+  document.getElementById("logout-btn").addEventListener("click", async () => {
     const { success } = await logout();
     if (success) {
-      window.location.href = '/login.html';
+      window.location.href = "/login.html";
     }
   });
 
   // Filter changes
-  document.getElementById('status-filter').addEventListener('change', applyFilters);
-  document.getElementById('date-range').addEventListener('change', applyFilters);
+  document
+    .getElementById("status-filter")
+    .addEventListener("change", applyFilters);
+  document
+    .getElementById("date-range")
+    .addEventListener("change", applyFilters);
 
   // Manage payment methods (Stripe Customer Portal)
-  document.getElementById('manage-payment-btn').addEventListener('click', () => {
-    // TODO: Implement Stripe Customer Portal integration
-    alert('Payment method management coming soon! You will be able to update your card on file through Stripe\'s secure portal.');
-  });
+  document
+    .getElementById("manage-payment-btn")
+    .addEventListener("click", () => {
+      // TODO: Implement Stripe Customer Portal integration
+      alert(
+        "Payment method management coming soon! You will be able to update your card on file through Stripe's secure portal.",
+      );
+    });
 }
 
 // Initialize page

@@ -15,6 +15,12 @@ const supabase = createSupabaseClient();
  */
 export async function loadServiceLogs(boatId, filters = {}) {
   try {
+    console.log(
+      "[DEBUG] Loading service logs for boat:",
+      boatId,
+      "with filters:",
+      filters,
+    );
     let query = supabase
       .from("service_logs")
       .select("*")
@@ -34,6 +40,11 @@ export async function loadServiceLogs(boatId, filters = {}) {
 
     if (error) throw error;
 
+    console.log(
+      "[DEBUG] Service logs loaded:",
+      data?.length || 0,
+      "logs found",
+    );
     return { serviceLogs: data || [], error: null };
   } catch (error) {
     console.error("Load service logs error:", error);

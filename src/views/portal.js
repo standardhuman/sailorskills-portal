@@ -201,6 +201,7 @@ async function init() {
  * Load user's accessible boats
  */
 async function loadBoats() {
+  console.log("[DEBUG] Loading boats for user:", currentUser.id);
   const { boats, error } = await getUserBoats(currentUser.id);
 
   if (error) {
@@ -208,6 +209,7 @@ async function loadBoats() {
     return;
   }
 
+  console.log("[DEBUG] Boats loaded:", boats.length, "boat(s) found");
   userBoats = boats;
 
   // Show selector if multiple boats OR if user is admin

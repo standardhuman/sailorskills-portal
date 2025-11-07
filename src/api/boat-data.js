@@ -14,6 +14,7 @@ const supabase = createSupabaseClient();
  */
 export async function getLatestServiceLog(boatId) {
   try {
+    console.log("[DEBUG] Fetching latest service log for boat:", boatId);
     const { data, error } = await supabase
       .from("service_logs")
       .select("*")
@@ -28,6 +29,10 @@ export async function getLatestServiceLog(boatId) {
     }
 
     // data will be null if no service logs exist - this is OK
+    console.log(
+      "[DEBUG] Latest service log result:",
+      data ? "Found service log" : "No service logs found",
+    );
     return { serviceLog: data, error: null };
   } catch (err) {
     console.error("Exception in getLatestServiceLog:", err);

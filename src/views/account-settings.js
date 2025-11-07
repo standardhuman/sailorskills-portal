@@ -45,14 +45,58 @@ let currentBoatId = null;
  */
 async function initImpersonationBanner() {
   const impersonatedId = sessionStorage.getItem("impersonatedCustomerId");
-  if (!impersonatedId) return;
+
+  if (!impersonatedId) {
+    return;
+  }
 
   const bannerEl = document.getElementById("impersonation-banner");
-  const displayEl = document.getElementById("impersonated-customer-display");
+  const searchInput = document.getElementById("banner-customer-search");
+  const datalist = document.getElementById("banner-customer-datalist");
   const exitBtn = document.getElementById("exit-impersonation-btn");
 
-  if (bannerEl) bannerEl.style.display = "flex";
-  if (displayEl && currentUser) displayEl.textContent = currentUser.email;
+  if (bannerEl) {
+    bannerEl.style.display = "flex";
+  }
+
+  // Load all customers for banner selector
+  const { customers, error } = await getAllCustomers();
+  if (error) {
+    console.error("Failed to load customers for banner:", error);
+    return;
+  }
+
+  // Populate banner datalist
+  customers.forEach((customer) => {
+    const option = document.createElement("option");
+    option.value = customer.displayText;
+    option.dataset.customerId = customer.id;
+    datalist.appendChild(option);
+  });
+
+  // Set current value to impersonated customer
+  if (currentUser) {
+    const currentCustomer = customers.find((c) => c.id === currentUser.id);
+    if (currentCustomer) {
+      searchInput.value = currentCustomer.displayText;
+    }
+  }
+
+  // Handle banner customer selection (quick switch)
+  searchInput.addEventListener("change", async (e) => {
+    const selectedText = e.target.value;
+    const selectedOption = Array.from(datalist.options).find(
+      (opt) => opt.value === selectedText,
+    );
+
+    if (selectedOption) {
+      const customerId = selectedOption.dataset.customerId;
+      const { success } = await setImpersonation(customerId);
+      if (success) window.location.reload();
+    }
+  });
+
+  // Handle exit button
   if (exitBtn) {
     exitBtn.addEventListener("click", () => {
       clearImpersonation();

@@ -664,6 +664,55 @@
       outline: none;
       border-color: var(--ss-primary);
     }
+
+    /* Impersonation Banner */
+    .impersonation-banner {
+      background: #fef3c7;
+      border-bottom: 2px solid #f59e0b;
+      padding: var(--ss-space-sm) var(--ss-space-lg);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .banner-content {
+      display: flex;
+      align-items: center;
+      gap: var(--ss-space-sm);
+      font-size: var(--ss-text-sm);
+      color: var(--ss-text-dark);
+    }
+
+    .banner-icon {
+      font-size: var(--ss-text-lg);
+    }
+
+    .banner-text {
+      font-weight: 500;
+    }
+
+    .banner-text strong {
+      color: var(--ss-primary);
+      font-weight: 700;
+    }
+
+    .btn-exit-impersonation {
+      padding: var(--ss-space-xs) var(--ss-space-md);
+      background: var(--ss-primary);
+      color: white;
+      border: none;
+      border-radius: var(--ss-radius-none);
+      font-weight: 600;
+      font-size: var(--ss-text-sm);
+      cursor: pointer;
+      font-family: var(--ss-font-primary);
+      transition: background 0.2s;
+    }
+
+    .btn-exit-impersonation:hover {
+      background: var(--ss-primary-dark);
+    }
   </style>
 </head>
 <body>
@@ -690,6 +739,20 @@
       <button class="btn btn-secondary" id="logout-btn">Sign Out</button>
     </div>
   </header>
+
+  <!-- Impersonation Banner -->
+  <div class="impersonation-banner" id="impersonation-banner" style="display: none;">
+    <div class="banner-content">
+      <span class="banner-icon">🔍</span>
+      <span class="banner-text">
+        Viewing portal as: <strong id="impersonated-customer-display">Loading...</strong>
+      </span>
+    </div>
+    <button class="btn-exit-impersonation" id="exit-impersonation-btn">
+      Exit Customer View
+    </button>
+  </div>
+  <!-- End Impersonation Banner -->
 
   <!-- Portal Navigation -->
   <nav class="portal-nav">

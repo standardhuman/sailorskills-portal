@@ -38,6 +38,36 @@ let selectedBoatId = null;
 let isAdminUser = false;
 
 /**
+ * Initialize impersonation banner
+ */
+async function initImpersonationBanner() {
+  const impersonatedId = sessionStorage.getItem("impersonatedCustomerId");
+
+  if (!impersonatedId) {
+    // No impersonation active
+    return;
+  }
+
+  const bannerEl = document.getElementById("impersonation-banner");
+  const displayEl = document.getElementById("impersonated-customer-display");
+  const exitBtn = document.getElementById("exit-impersonation-btn");
+
+  // Show banner
+  bannerEl.style.display = "flex";
+
+  // Display impersonated customer info
+  if (currentUser) {
+    displayEl.textContent = `${currentUser.email}`;
+  }
+
+  // Handle exit button
+  exitBtn.addEventListener("click", () => {
+    clearImpersonation();
+    window.location.reload();
+  });
+}
+
+/**
  * Initialize customer selector for admins
  */
 async function initCustomerSelector() {
@@ -100,6 +130,9 @@ async function init() {
   }
 
   currentUser = user;
+
+  // Initialize impersonation banner if active
+  await initImpersonationBanner();
 
   // Check if user is admin
   isAdminUser = await isAdmin(user.id);

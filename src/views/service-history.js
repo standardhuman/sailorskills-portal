@@ -6,6 +6,7 @@
 import {
   requireAuth,
   getCurrentUser,
+  getEffectiveUser,
   getUserBoats,
   logout,
 } from "../auth/auth.js";
@@ -26,7 +27,7 @@ if (!isAuth) {
 }
 
 // Get current user and boats
-const { user, error: userError } = await getCurrentUser();
+const { user, error: userError } = await getEffectiveUser();
 if (userError || !user) {
   console.error("Failed to get user:", userError);
   window.location.href = "/login.html";

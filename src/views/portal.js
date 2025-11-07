@@ -50,16 +50,53 @@ async function initImpersonationBanner() {
   }
 
   const bannerEl = document.getElementById("impersonation-banner");
-  const displayEl = document.getElementById("impersonated-customer-display");
+  const searchInput = document.getElementById("banner-customer-search");
+  const datalist = document.getElementById("banner-customer-datalist");
   const exitBtn = document.getElementById("exit-impersonation-btn");
 
   // Show banner
   bannerEl.style.display = "flex";
 
-  // Display impersonated customer info
-  if (currentUser) {
-    displayEl.textContent = `${currentUser.email}`;
+  // Hide header selector when impersonating
+  const headerSelector = document.getElementById("admin-customer-selector");
+  if (headerSelector) headerSelector.style.display = "none";
+
+  // Load all customers for banner selector
+  const { customers, error } = await getAllCustomers();
+  if (error) {
+    console.error("Failed to load customers for banner:", error);
+    return;
   }
+
+  // Populate banner datalist
+  customers.forEach((customer) => {
+    const option = document.createElement("option");
+    option.value = customer.displayText;
+    option.dataset.customerId = customer.id;
+    datalist.appendChild(option);
+  });
+
+  // Set current value to impersonated customer
+  if (currentUser) {
+    const currentCustomer = customers.find((c) => c.id === currentUser.id);
+    if (currentCustomer) {
+      searchInput.value = currentCustomer.displayText;
+    }
+  }
+
+  // Handle banner customer selection (quick switch)
+  searchInput.addEventListener("change", async (e) => {
+    const selectedText = e.target.value;
+    const selectedOption = Array.from(datalist.options).find(
+      (opt) => opt.value === selectedText,
+    );
+
+    if (selectedOption) {
+      const customerId = selectedOption.dataset.customerId;
+      const { success } = await setImpersonation(customerId);
+      if (success) window.location.reload();
+    }
+  });
 
   // Handle exit button
   exitBtn.addEventListener("click", () => {
@@ -69,10 +106,14 @@ async function initImpersonationBanner() {
 }
 
 /**
- * Initialize customer selector for admins
+ * Initialize customer selector for admins (header)
  */
 async function initCustomerSelector() {
   if (!isAdminUser) return;
+
+  // Don't show header selector if impersonating (it's in the banner instead)
+  const impersonatedId = sessionStorage.getItem("impersonatedCustomerId");
+  if (impersonatedId) return;
 
   const selectorEl = document.getElementById("admin-customer-selector");
   const searchInput = document.getElementById("customer-search");

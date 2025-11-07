@@ -697,6 +697,22 @@
       font-weight: 700;
     }
 
+    .banner-customer-selector {
+      width: 350px;
+      padding: var(--ss-space-xs) var(--ss-space-sm);
+      border: 1px solid #d97706;
+      border-radius: var(--ss-radius-none);
+      font-size: var(--ss-text-sm);
+      font-family: var(--ss-font-primary);
+      background: white;
+    }
+
+    .banner-customer-selector:focus {
+      outline: none;
+      border-color: var(--ss-primary);
+      box-shadow: 0 0 0 2px rgba(32, 93, 139, 0.1);
+    }
+
     .btn-exit-impersonation {
       padding: var(--ss-space-xs) var(--ss-space-md);
       background: var(--ss-primary);
@@ -744,9 +760,16 @@
   <div class="impersonation-banner" id="impersonation-banner" style="display: none;">
     <div class="banner-content">
       <span class="banner-icon">🔍</span>
-      <span class="banner-text">
-        Viewing portal as: <strong id="impersonated-customer-display">Loading...</strong>
-      </span>
+      <span class="banner-text">Viewing as:</span>
+      <input
+        type="text"
+        id="banner-customer-search"
+        class="banner-customer-selector"
+        placeholder="Search customers..."
+        autocomplete="off"
+        list="banner-customer-datalist"
+      />
+      <datalist id="banner-customer-datalist"></datalist>
     </div>
     <button class="btn-exit-impersonation" id="exit-impersonation-btn">
       Exit Customer View

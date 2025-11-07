@@ -238,15 +238,27 @@ export async function requireAuth() {
 
 /**
  * Check if user is an admin
- * @param {string} userId - User ID
+ * @param {string} userId - User ID (can be account ID or customer ID)
  * @returns {Promise<boolean>}
  */
 export async function isAdmin(userId) {
   try {
+    // If we're impersonating, userId might be a customer ID
+    // In that case, get the actual admin user's account ID
+    const impersonatedId = sessionStorage.getItem("impersonatedCustomerId");
+    let checkUserId = userId;
+
+    if (impersonatedId && userId === impersonatedId) {
+      // User ID is a customer ID, get the actual authenticated user
+      const { user } = await getCurrentUser();
+      if (!user) return false;
+      checkUserId = user.id;
+    }
+
     const { data, error } = await supabase
       .from("customer_accounts")
       .select("is_admin")
-      .eq("id", userId)
+      .eq("id", checkUserId)
       .single();
 
     if (error) {

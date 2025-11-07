@@ -31,25 +31,28 @@ export async function getAllCustomers() {
     .select(
       `
       id,
+      name,
       email,
       boats:boats(count)
     `,
     )
-    .order("email");
+    .order("name");
 
   if (error) {
     console.error("Error fetching customers:", error);
     return { customers: [], error };
   }
 
-  // Format for display: "Email - X boat(s)"
+  // Format for display: "Name (email) - X boat(s)"
   const formatted = customers.map((c) => {
     const boatCount = c.boats?.[0]?.count || 0;
+    const name = c.name || c.email; // Fallback to email if no name
     return {
       id: c.id,
+      name: c.name,
       email: c.email,
       boatCount,
-      displayText: `${c.email} - ${boatCount} boat${boatCount !== 1 ? "s" : ""}`,
+      displayText: `${name} (${c.email}) - ${boatCount} boat${boatCount !== 1 ? "s" : ""}`,
     };
   });
 

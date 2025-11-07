@@ -239,12 +239,14 @@ export async function getServiceMedia(boatId) {
 export function daysSinceService(serviceDate) {
   if (!serviceDate) return null;
 
-  const service = new Date(serviceDate);
+  const service = new Date(serviceDate + "T00:00:00");
   const today = new Date();
-  const diffTime = Math.abs(today - service);
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  today.setHours(0, 0, 0, 0); // Reset to start of day for accurate comparison
 
-  return diffDays;
+  const diffTime = today - service;
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+  return Math.max(0, diffDays); // Return 0 for today, not negative for future dates
 }
 
 /**

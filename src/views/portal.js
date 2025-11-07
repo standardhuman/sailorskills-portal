@@ -200,19 +200,22 @@ async function loadPaintCondition(boatId) {
 
   // Map paint condition to position percentage on gradient
   const conditionMap = {
+    "not inspected": 0,
     "not-inspected": 0,
     excellent: 12.5,
-    "exc-good": 18.75,
+    "excellent-good": 25,
+    "exc-good": 25,
     good: 37.5,
     "good-fair": 50,
     fair: 62.5,
     "fair-poor": 75,
     poor: 87.5,
+    "very poor": 100,
     "very-poor": 100,
   };
 
-  // Normalize condition to lowercase for lookup
-  const normalizedCondition = paintData.overall.toLowerCase();
+  // Normalize condition to lowercase and trim for lookup
+  const normalizedCondition = paintData.overall.toLowerCase().trim();
   const position = conditionMap[normalizedCondition] || 0;
 
   // Position the marker on the gradient
@@ -235,7 +238,9 @@ async function loadPaintCondition(boatId) {
   // Update service date info
   const dateInfo = document.getElementById("service-date-info");
   if (dateInfo && paintData.serviceDate && days !== null) {
-    dateInfo.textContent = `Last inspected ${days} day${days !== 1 ? "s" : ""} ago (${formatDate(paintData.serviceDate)})`;
+    const timeText =
+      days === 0 ? "today" : `${days} day${days !== 1 ? "s" : ""} ago`;
+    dateInfo.textContent = `Last inspected ${timeText} (${formatDate(paintData.serviceDate)})`;
   }
 
   // Update condition stat if it exists
@@ -554,7 +559,9 @@ function createConditionsSection(log) {
             ? `
           <div class="condition-item-card">
             <div class="condition-item-label">Growth Level</div>
-            <div style="font-size: 14px; color: var(--ss-text-dark); font-weight: 400;">${escapeHtml(log.growth_level)}</div>
+            <span class="condition-badge" style="background: #e5e7eb; color: #4b5563;">
+              ${escapeHtml(log.growth_level.charAt(0).toUpperCase() + log.growth_level.slice(1))}
+            </span>
           </div>
         `
             : ""

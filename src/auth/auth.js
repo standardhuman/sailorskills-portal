@@ -343,6 +343,30 @@ export async function getEffectiveUser() {
  */
 export async function getUserBoats(userId) {
   try {
+    // Check if we're in impersonation mode
+    const impersonatedId = sessionStorage.getItem("impersonatedCustomerId");
+
+    if (impersonatedId && userId === impersonatedId) {
+      // Impersonating: userId is a customer_id, query boats directly
+      const { data, error } = await supabase
+        .from("boats")
+        .select("*")
+        .eq("customer_id", userId)
+        .order("name", { ascending: true });
+
+      if (error) throw error;
+
+      // Format boats for impersonated view
+      const boats = data.map((boat) => ({
+        ...boat,
+        isPrimary: false,
+        grantedAt: null,
+        isAdminView: false,
+      }));
+
+      return { boats, error: null };
+    }
+
     // Check if user is admin
     const adminStatus = await isAdmin(userId);
 

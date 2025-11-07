@@ -210,13 +210,24 @@ async function loadPaintCondition(boatId) {
     fair: 62.5,
     "fair-poor": 75,
     poor: 87.5,
+    missing: 87.5, // Treat missing as poor
     "very poor": 100,
     "very-poor": 100,
   };
 
-  // Normalize condition to lowercase and trim for lookup
-  const normalizedCondition = paintData.overall.toLowerCase().trim();
-  const position = conditionMap[normalizedCondition] || 0;
+  // Handle comma-separated conditions (e.g., "Fair, Poor" or "Excellent, Good")
+  // Take the WORST condition (highest position value)
+  let position = 0;
+  const rawCondition = paintData.overall.toLowerCase().trim();
+
+  if (rawCondition.includes(",")) {
+    // Split by comma and find worst condition
+    const conditions = rawCondition.split(",").map((c) => c.trim());
+    position = Math.max(...conditions.map((c) => conditionMap[c] || 0));
+  } else {
+    // Single condition - direct lookup
+    position = conditionMap[rawCondition] || 0;
+  }
 
   // Position the marker on the gradient
   const marker = document.getElementById("condition-marker");

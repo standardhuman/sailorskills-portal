@@ -256,12 +256,45 @@ export function daysSinceService(serviceDate) {
  * @returns {Object} Status object with isDue, status, message
  */
 export function getPaintStatus(paintCondition, daysSince) {
+  // Handle comma-separated conditions (take worst one)
+  let worstCondition = paintCondition.toLowerCase().trim();
+
+  if (worstCondition.includes(",")) {
+    // Split and find worst condition based on severity
+    const conditions = worstCondition.split(",").map((c) => c.trim());
+    const severityMap = {
+      "not inspected": 0,
+      "not-inspected": 0,
+      excellent: 1,
+      "excellent-good": 2,
+      "exc-good": 2,
+      good: 3,
+      "good-fair": 4,
+      fair: 5,
+      "fair-poor": 6,
+      poor: 7,
+      missing: 7,
+      "very poor": 8,
+      "very-poor": 8,
+    };
+
+    // Find condition with highest severity
+    let maxSeverity = 0;
+    conditions.forEach((c) => {
+      const severity = severityMap[c] || 0;
+      if (severity > maxSeverity) {
+        maxSeverity = severity;
+        worstCondition = c;
+      }
+    });
+  }
+
   // Paint condition threshold: good-fair = time to consider repainting
   // fair-poor or worse = past due
-  const needsRepaint = ["fair-poor", "poor", "very-poor"].includes(
-    paintCondition,
+  const needsRepaint = ["fair-poor", "poor", "missing", "very-poor"].includes(
+    worstCondition,
   );
-  const shouldConsider = ["good-fair", "fair"].includes(paintCondition);
+  const shouldConsider = ["good-fair", "fair"].includes(worstCondition);
 
   let status = "good";
   let message = "Paint condition is good";
@@ -275,7 +308,9 @@ export function getPaintStatus(paintCondition, daysSince) {
     status = "due-soon";
     message = "Consider repainting in the near future";
     isDue = false;
-  } else if (["excellent", "exc-good", "good"].includes(paintCondition)) {
+  } else if (
+    ["excellent", "exc-good", "excellent-good", "good"].includes(worstCondition)
+  ) {
     status = "good";
     message = "Paint condition is excellent";
     isDue = false;

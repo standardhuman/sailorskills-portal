@@ -479,9 +479,15 @@
       font-weight: 700;
     }
 
+    .banner-selector-wrapper {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+    }
+
     .banner-customer-selector {
       width: 350px;
-      padding: var(--ss-space-xs) var(--ss-space-sm);
+      padding: var(--ss-space-xs) 32px var(--ss-space-xs) var(--ss-space-sm);
       border: 1px solid #d97706;
       border-radius: var(--ss-radius-none);
       font-size: var(--ss-text-sm);
@@ -493,6 +499,32 @@
       outline: none;
       border-color: var(--ss-primary);
       box-shadow: 0 0 0 2px rgba(32, 93, 139, 0.1);
+    }
+
+    .banner-dropdown-arrow {
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 28px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 10px;
+      color: #6b7280;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.2s;
+    }
+
+    .banner-dropdown-arrow:hover {
+      color: var(--ss-primary);
+    }
+
+    .banner-dropdown-arrow:focus {
+      outline: none;
+      color: var(--ss-primary);
     }
 
     .btn-exit-impersonation {
@@ -543,14 +575,17 @@
     <div class="banner-content">
       <span class="banner-icon">🔍</span>
       <span class="banner-text">Viewing as:</span>
-      <input
-        type="text"
-        id="banner-customer-search"
-        class="banner-customer-selector"
-        placeholder="Search customers..."
-        autocomplete="off"
-        list="banner-customer-datalist"
-      />
+      <div class="banner-selector-wrapper">
+        <input
+          type="text"
+          id="banner-customer-search"
+          class="banner-customer-selector"
+          placeholder="Search customers..."
+          autocomplete="off"
+          list="banner-customer-datalist"
+        />
+        <button type="button" class="banner-dropdown-arrow" id="banner-dropdown-arrow" title="Show all customers">▼</button>
+      </div>
       <datalist id="banner-customer-datalist"></datalist>
     </div>
     <button class="btn-exit-impersonation" id="exit-impersonation-btn">

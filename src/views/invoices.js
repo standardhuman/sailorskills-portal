@@ -97,6 +97,17 @@ async function initImpersonationBanner() {
     }
   });
 
+  // Handle dropdown arrow click - show all customers
+  const dropdownArrow = document.getElementById("banner-dropdown-arrow");
+  if (dropdownArrow) {
+    dropdownArrow.addEventListener("click", () => {
+      searchInput.value = ""; // Clear to show all options
+      searchInput.focus();
+      // Trigger the datalist to show by dispatching events
+      searchInput.click();
+    });
+  }
+
   // Handle exit button
   if (exitBtn) {
     exitBtn.addEventListener("click", () => {

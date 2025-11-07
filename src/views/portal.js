@@ -6,6 +6,7 @@
 import {
   requireAuth,
   getCurrentUser,
+  getEffectiveUser,
   getUserBoats,
   logout,
   isAdmin,
@@ -121,7 +122,7 @@ async function initCustomerSelector() {
  */
 async function init() {
   // Get current user
-  const { user, error: userError } = await getCurrentUser();
+  const { user, error: userError, isImpersonated } = await getEffectiveUser();
 
   if (userError || !user) {
     console.error("Error loading user:", userError);

@@ -9,7 +9,11 @@ import {
   getEffectiveUser,
   getUserBoats,
   logout,
+  isAdmin,
+  setImpersonation,
+  clearImpersonation,
 } from "../auth/auth.js";
+import { getAllCustomers } from "../api/customers.js";
 import {
   loadServiceLogs,
   getServiceStats,
@@ -65,6 +69,81 @@ let boatPlaylist = null;
 let playlistVideos = [];
 
 /**
+ * Initialize impersonation banner
+ */
+async function initImpersonationBanner() {
+  const impersonatedId = sessionStorage.getItem("impersonatedCustomerId");
+
+  if (!impersonatedId) {
+    return;
+  }
+
+  const bannerEl = document.getElementById("impersonation-banner");
+  const displayEl = document.getElementById("impersonated-customer-display");
+  const exitBtn = document.getElementById("exit-impersonation-btn");
+
+  if (bannerEl) {
+    bannerEl.style.display = "flex";
+  }
+
+  if (displayEl && user) {
+    displayEl.textContent = `${user.email}`;
+  }
+
+  if (exitBtn) {
+    exitBtn.addEventListener("click", () => {
+      clearImpersonation();
+      window.location.reload();
+    });
+  }
+}
+
+/**
+ * Initialize customer selector for admins
+ */
+async function initCustomerSelector() {
+  const adminStatus = await isAdmin(user.id);
+  if (!adminStatus) return;
+
+  const selectorEl = document.getElementById("admin-customer-selector");
+  const searchInput = document.getElementById("customer-search");
+  const datalist = document.getElementById("customer-datalist");
+
+  if (!selectorEl || !searchInput || !datalist) return;
+
+  selectorEl.style.display = "flex";
+
+  const { customers, error } = await getAllCustomers();
+  if (error) {
+    console.error("Failed to load customers for selector:", error);
+    return;
+  }
+
+  customers.forEach((customer) => {
+    const option = document.createElement("option");
+    option.value = customer.displayText;
+    option.dataset.customerId = customer.id;
+    datalist.appendChild(option);
+  });
+
+  searchInput.addEventListener("change", async (e) => {
+    const selectedText = e.target.value;
+    const selectedOption = Array.from(datalist.options).find(
+      (opt) => opt.value === selectedText,
+    );
+
+    if (selectedOption) {
+      const customerId = selectedOption.dataset.customerId;
+      const { success } = await setImpersonation(customerId);
+
+      if (success) {
+        window.location.reload();
+      }
+    }
+  });
+}
+
+/**
  * Setup event listeners
  */
 function setupEventListeners() {
@@ -79,6 +158,12 @@ function setupEventListeners() {
 async function init() {
   // Set user email
   userEmailEl.textContent = user.email;
+
+  // Initialize impersonation banner if active
+  await initImpersonationBanner();
+
+  // Initialize customer selector for admins
+  await initCustomerSelector();
 
   // Setup event listeners
   setupEventListeners();

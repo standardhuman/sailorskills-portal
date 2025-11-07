@@ -520,6 +520,82 @@
         grid-template-columns: 1fr;
       }
     }
+
+    /* Admin Customer Selector */
+    .admin-customer-selector {
+      display: flex;
+      align-items: center;
+      gap: var(--ss-space-xs);
+    }
+
+    .admin-customer-selector label {
+      font-size: var(--ss-text-sm);
+      font-weight: 600;
+      color: var(--ss-text-medium);
+    }
+
+    .admin-customer-selector input {
+      width: 300px;
+      padding: var(--ss-space-xs) var(--ss-space-sm);
+      border: 1px solid var(--ss-border);
+      border-radius: var(--ss-radius-none);
+      font-size: var(--ss-text-sm);
+      font-family: var(--ss-font-primary);
+    }
+
+    .admin-customer-selector input:focus {
+      outline: none;
+      border-color: var(--ss-primary);
+    }
+
+    /* Impersonation Banner */
+    .impersonation-banner {
+      background: #fef3c7;
+      border-bottom: 2px solid #f59e0b;
+      padding: var(--ss-space-sm) var(--ss-space-lg);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .banner-content {
+      display: flex;
+      align-items: center;
+      gap: var(--ss-space-sm);
+      font-size: var(--ss-text-sm);
+      color: var(--ss-text-dark);
+    }
+
+    .banner-icon {
+      font-size: var(--ss-text-lg);
+    }
+
+    .banner-text {
+      font-weight: 500;
+    }
+
+    .banner-text strong {
+      color: var(--ss-primary);
+      font-weight: 700;
+    }
+
+    .btn-exit-impersonation {
+      padding: var(--ss-space-xs) var(--ss-space-md);
+      background: var(--ss-primary);
+      color: white;
+      border: none;
+      border-radius: var(--ss-radius-none);
+      font-weight: 600;
+      font-size: var(--ss-text-sm);
+      cursor: pointer;
+      font-family: var(--ss-font-primary);
+      transition: background 0.2s;
+    }
+
+    .btn-exit-impersonation:hover {
+      background: var(--ss-primary-dark);
+    }
   </style>
 </head>
 <body>
@@ -528,11 +604,38 @@
     <div class="header-left">
       <h1>⚓ Sailor Skills</h1>
     </div>
+    <!-- Admin Customer Selector -->
+    <div class="admin-customer-selector" id="admin-customer-selector" style="display: none;">
+      <label for="customer-search">View as:</label>
+      <input
+        type="text"
+        id="customer-search"
+        placeholder="Search customers..."
+        autocomplete="off"
+        list="customer-datalist"
+      />
+      <datalist id="customer-datalist"></datalist>
+    </div>
+    <!-- End Admin Customer Selector -->
     <div class="header-right">
       <span class="user-email" id="user-email">Loading...</span>
       <button class="btn btn-secondary" id="logout-btn">Sign Out</button>
     </div>
   </header>
+
+  <!-- Impersonation Banner -->
+  <div class="impersonation-banner" id="impersonation-banner" style="display: none;">
+    <div class="banner-content">
+      <span class="banner-icon">🔍</span>
+      <span class="banner-text">
+        Viewing portal as: <strong id="impersonated-customer-display">Loading...</strong>
+      </span>
+    </div>
+    <button class="btn-exit-impersonation" id="exit-impersonation-btn">
+      Exit Customer View
+    </button>
+  </div>
+  <!-- End Impersonation Banner -->
 
   <!-- Portal Navigation -->
   <nav class="portal-nav">

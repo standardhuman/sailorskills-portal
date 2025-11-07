@@ -385,11 +385,47 @@ function setupEventListeners() {
   // Manage payment methods (Stripe Customer Portal)
   document
     .getElementById("manage-payment-btn")
-    .addEventListener("click", () => {
-      // TODO: Implement Stripe Customer Portal integration
-      alert(
-        "Payment method management coming soon! You will be able to update your card on file through Stripe's secure portal.",
-      );
+    .addEventListener("click", async () => {
+      try {
+        const btn = document.getElementById("manage-payment-btn");
+        btn.disabled = true;
+        btn.textContent = "Opening Portal...";
+
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const response = await fetch(
+          `${supabaseUrl}/functions/v1/create-customer-portal-session`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+            },
+            body: JSON.stringify({
+              customerId: currentUser.id,
+            }),
+          },
+        );
+
+        const data = await response.json();
+
+        if (!response.ok || data.error) {
+          throw new Error(data.error || "Failed to create portal session");
+        }
+
+        // Redirect to Stripe Customer Portal
+        window.location.href = data.url;
+      } catch (error) {
+        console.error("Error opening payment portal:", error);
+        alert(
+          "Unable to open payment portal. Please contact support.\n\nError: " +
+            error.message,
+        );
+
+        // Re-enable button
+        const btn = document.getElementById("manage-payment-btn");
+        btn.disabled = false;
+        btn.textContent = "Manage Payment Methods";
+      }
     });
 }
 

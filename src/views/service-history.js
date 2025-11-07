@@ -49,8 +49,16 @@ if (boatsError || !boats || boats.length === 0) {
   throw new Error("No boats found");
 }
 
-// Use first boat (in Phase 8 we'll add boat switching)
-const currentBoat = boats[0];
+// Get the currently selected boat from localStorage (set by portal.js)
+let currentBoat = null;
+const savedBoatId = localStorage.getItem("currentBoatId");
+if (savedBoatId && boats.find((b) => b.id === savedBoatId)) {
+  currentBoat = boats.find((b) => b.id === savedBoatId);
+} else {
+  // Select primary boat or first boat
+  const primaryBoat = boats.find((b) => b.isPrimary);
+  currentBoat = primaryBoat || boats[0];
+}
 
 // Playlist data (fetched once, used for all service logs)
 let boatPlaylist = null;

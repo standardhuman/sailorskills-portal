@@ -560,15 +560,27 @@ function createPropellersSection(log) {
 
   if (propellers.length === 0) return "";
 
+  // Determine propeller labels
+  const getPropellerLabel = (index, total) => {
+    if (total === 1) {
+      return null; // No label for single propeller
+    } else if (total === 2) {
+      return index === 0 ? "Port" : "Starboard";
+    } else {
+      return `Propeller #${index + 1}`;
+    }
+  };
+
   return `
     <div class="detail-section">
       <h4>Propeller Condition</h4>
       <ul class="anode-list">
         ${propellers
-          .map(
-            (prop) => `
+          .map((prop, index) => {
+            const label = getPropellerLabel(index, propellers.length);
+            return `
           <li class="anode-item">
-            <div><strong style="font-size: var(--ss-text-sm); color: var(--ss-text-dark);">Propeller #${prop.number || 1}</strong></div>
+            ${label ? `<div><strong style="font-size: var(--ss-text-sm); color: var(--ss-text-dark);">${label}</strong></div>` : ""}
             <div>
               <span class="condition-badge ${getConditionClass(prop.condition || "good")}">
                 ${escapeHtml(prop.condition || "N/A")}
@@ -576,8 +588,8 @@ function createPropellersSection(log) {
             </div>
           </li>
           ${prop.notes ? `<div style="padding-left: var(--ss-space-md); font-size: var(--ss-text-xs); color: var(--ss-text-medium); font-style: italic;">${escapeHtml(prop.notes)}</div>` : ""}
-        `,
-          )
+        `;
+          })
           .join("")}
       </ul>
       ${

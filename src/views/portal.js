@@ -675,22 +675,34 @@ function createPropellersSection(log) {
     return "";
   }
 
+  // Determine propeller labels
+  const getPropellerLabel = (index, total) => {
+    if (total === 1) {
+      return "Propeller"; // Just "Propeller" for single propeller
+    } else if (total === 2) {
+      return index === 0 ? "Port Propeller" : "Starboard Propeller";
+    } else {
+      return `Propeller #${index + 1}`;
+    }
+  };
+
   return `
     <div style="margin-top: 24px;">
       <h4 style="margin: 0 0 12px 0; font-size: 16px; font-weight: 600; color: var(--ss-text-dark);">Propeller Condition</h4>
       <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;">
         ${propellers
-          .map(
-            (prop) => `
+          .map((prop, index) => {
+            const label = getPropellerLabel(index, propellers.length);
+            return `
           <div class="condition-item-card">
-            <div class="condition-item-label">Propeller #${prop.number || 1}</div>
+            <div class="condition-item-label">${label}</div>
             <span class="condition-badge ${getConditionClass(prop.condition || "good")}">
               ${escapeHtml(prop.condition || "N/A")}
             </span>
             ${prop.notes ? `<div style="margin-top: 6px; font-size: 11px; color: #6b7280; font-style: italic;">${escapeHtml(prop.notes)}</div>` : ""}
           </div>
-        `,
-          )
+        `;
+          })
           .join("")}
       </div>
     </div>

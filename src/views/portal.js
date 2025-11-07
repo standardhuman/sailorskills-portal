@@ -199,35 +199,22 @@ async function loadPaintCondition(boatId) {
   }
 
   // Map paint condition to position percentage on gradient
+  // Conditions are already normalized by getPaintCondition()
   const conditionMap = {
-    "not inspected": 0,
     "not-inspected": 0,
     excellent: 12.5,
     "excellent-good": 25,
-    "exc-good": 25,
     good: 37.5,
     "good-fair": 50,
     fair: 62.5,
     "fair-poor": 75,
     poor: 87.5,
-    missing: 87.5, // Treat missing as poor
-    "very poor": 100,
+    missing: 87.5,
     "very-poor": 100,
   };
 
-  // Handle comma-separated conditions (e.g., "Fair, Poor" or "Excellent, Good")
-  // Take the WORST condition (highest position value)
-  let position = 0;
-  const rawCondition = paintData.overall.toLowerCase().trim();
-
-  if (rawCondition.includes(",")) {
-    // Split by comma and find worst condition
-    const conditions = rawCondition.split(",").map((c) => c.trim());
-    position = Math.max(...conditions.map((c) => conditionMap[c] || 0));
-  } else {
-    // Single condition - direct lookup
-    position = conditionMap[rawCondition] || 0;
-  }
+  // Direct lookup - condition is already normalized to format like "fair-poor"
+  const position = conditionMap[paintData.overall] || 0;
 
   // Position the marker on the gradient
   const marker = document.getElementById("condition-marker");
@@ -542,6 +529,32 @@ async function createServiceVideosSection(boatId, serviceDate) {
 }
 
 /**
+ * Normalize condition from database (convert comma-separated to hyphenated)
+ * @param {string} condition - Raw condition from database
+ * @returns {string} Normalized condition
+ */
+function normalizeDisplayCondition(condition) {
+  if (!condition) return "";
+
+  const raw = condition.trim();
+
+  // Handle comma-separated ranges: "Fair, Poor" → "Fair-Poor"
+  if (raw.includes(",")) {
+    const parts = raw.split(",").map((p) => p.trim());
+
+    // Handle special cases
+    if (parts.some((p) => p.toLowerCase() === "missing")) {
+      return "Poor";
+    }
+
+    // Join with hyphen for range display
+    return parts.join("-");
+  }
+
+  return raw;
+}
+
+/**
  * Create conditions section for service display
  */
 function createConditionsSection(log) {
@@ -549,29 +562,33 @@ function createConditionsSection(log) {
     log.paint_condition_overall || log.growth_level || log.thru_hull_condition;
   if (!hasConditions) return "";
 
+  // Normalize conditions for display
+  const paintCondition = normalizeDisplayCondition(log.paint_condition_overall);
+  const growthLevel = normalizeDisplayCondition(log.growth_level);
+
   return `
     <div style="margin-top: 24px;">
       <h4 style="margin: 0 0 12px 0; font-size: 16px; font-weight: 600; color: var(--ss-text-dark);">Vessel Condition</h4>
       <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;">
         ${
-          log.paint_condition_overall
+          paintCondition
             ? `
           <div class="condition-item-card">
             <div class="condition-item-label">Paint Condition</div>
-            <span class="condition-badge ${getConditionClass(log.paint_condition_overall)}">
-              ${escapeHtml(log.paint_condition_overall)}
+            <span class="condition-badge ${getConditionClass(paintCondition.toLowerCase())}">
+              ${escapeHtml(paintCondition)}
             </span>
           </div>
         `
             : ""
         }
         ${
-          log.growth_level
+          growthLevel
             ? `
           <div class="condition-item-card">
             <div class="condition-item-label">Growth Level</div>
             <span class="condition-badge" style="background: #e5e7eb; color: #4b5563;">
-              ${escapeHtml(log.growth_level.charAt(0).toUpperCase() + log.growth_level.slice(1))}
+              ${escapeHtml(growthLevel.charAt(0).toUpperCase() + growthLevel.slice(1))}
             </span>
           </div>
         `
@@ -740,12 +757,13 @@ function formatConditionText(condition) {
   const textMap = {
     "not-inspected": "Not Inspected",
     excellent: "Excellent",
-    "exc-good": "Exc-Good",
+    "excellent-good": "Excellent-Good",
     good: "Good",
     "good-fair": "Good-Fair",
     fair: "Fair",
     "fair-poor": "Fair-Poor",
     poor: "Poor",
+    missing: "Poor",
     "very-poor": "Very Poor",
   };
   return textMap[condition] || "Unknown";

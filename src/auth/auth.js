@@ -3,12 +3,12 @@
  * Handles user authentication, session management, and authorization
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from "@supabase/supabase-js";
 
 // Create Supabase client
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
+  import.meta.env.VITE_SUPABASE_ANON_KEY,
 );
 
 /**
@@ -21,7 +21,7 @@ export async function loginWithEmail(email, password) {
   try {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
-      password
+      password,
     });
 
     if (error) throw error;
@@ -33,7 +33,7 @@ export async function loginWithEmail(email, password) {
 
     return { user: data.user, session: data.session, error: null };
   } catch (error) {
-    console.error('Login error:', error);
+    console.error("Login error:", error);
     return { user: null, session: null, error: error.message };
   }
 }
@@ -48,15 +48,15 @@ export async function loginWithMagicLink(email) {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/portal`
-      }
+        emailRedirectTo: `${window.location.origin}/portal`,
+      },
     });
 
     if (error) throw error;
 
     return { success: true, error: null };
   } catch (error) {
-    console.error('Magic link error:', error);
+    console.error("Magic link error:", error);
     return { success: false, error: error.message };
   }
 }
@@ -75,20 +75,20 @@ export async function signUp(email, password, boatSlug = null) {
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/portal`
-      }
+        emailRedirectTo: `${window.location.origin}/portal`,
+      },
     });
 
     if (authError) throw authError;
 
     // Create customer account record
     const { data: accountData, error: accountError } = await supabase
-      .from('customer_accounts')
+      .from("customer_accounts")
       .insert({
         id: authData.user.id,
         email: email,
         magic_link_enabled: true,
-        password_enabled: true
+        password_enabled: true,
       })
       .select()
       .single();
@@ -102,7 +102,7 @@ export async function signUp(email, password, boatSlug = null) {
 
     return { user: authData.user, session: authData.session, error: null };
   } catch (error) {
-    console.error('Signup error:', error);
+    console.error("Signup error:", error);
     return { user: null, session: null, error: error.message };
   }
 }
@@ -115,14 +115,14 @@ export async function signUp(email, password, boatSlug = null) {
 export async function resetPassword(email) {
   try {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`
+      redirectTo: `${window.location.origin}/reset-password`,
     });
 
     if (error) throw error;
 
     return { success: true, error: null };
   } catch (error) {
-    console.error('Password reset error:', error);
+    console.error("Password reset error:", error);
     return { success: false, error: error.message };
   }
 }
@@ -135,14 +135,14 @@ export async function resetPassword(email) {
 export async function updatePassword(newPassword) {
   try {
     const { error } = await supabase.auth.updateUser({
-      password: newPassword
+      password: newPassword,
     });
 
     if (error) throw error;
 
     return { success: true, error: null };
   } catch (error) {
-    console.error('Password update error:', error);
+    console.error("Password update error:", error);
     return { success: false, error: error.message };
   }
 }
@@ -153,13 +153,16 @@ export async function updatePassword(newPassword) {
  */
 export async function getCurrentUser() {
   try {
-    const { data: { user }, error } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
 
     if (error) throw error;
 
     return { user, error: null };
   } catch (error) {
-    console.error('Get user error:', error);
+    console.error("Get user error:", error);
     return { user: null, error: error.message };
   }
 }
@@ -170,13 +173,16 @@ export async function getCurrentUser() {
  */
 export async function getCurrentSession() {
   try {
-    const { data: { session }, error } = await supabase.auth.getSession();
+    const {
+      data: { session },
+      error,
+    } = await supabase.auth.getSession();
 
     if (error) throw error;
 
     return { session, error: null };
   } catch (error) {
-    console.error('Get session error:', error);
+    console.error("Get session error:", error);
     return { session: null, error: error.message };
   }
 }
@@ -187,16 +193,19 @@ export async function getCurrentSession() {
  */
 export async function logout() {
   try {
+    // Clear impersonation state on logout
+    clearImpersonation();
+
     const { error } = await supabase.auth.signOut();
 
     if (error) throw error;
 
     // Clear any local storage
-    localStorage.removeItem('currentBoatId');
+    localStorage.removeItem("currentBoatId");
 
     return { success: true, error: null };
   } catch (error) {
-    console.error('Logout error:', error);
+    console.error("Logout error:", error);
     return { success: false, error: error.message };
   }
 }
@@ -219,8 +228,8 @@ export async function requireAuth() {
 
   if (!authenticated) {
     // Store intended destination
-    sessionStorage.setItem('redirectAfterLogin', window.location.pathname);
-    window.location.href = '/login.html';
+    sessionStorage.setItem("redirectAfterLogin", window.location.pathname);
+    window.location.href = "/login.html";
     return false;
   }
 
@@ -235,21 +244,95 @@ export async function requireAuth() {
 export async function isAdmin(userId) {
   try {
     const { data, error } = await supabase
-      .from('customer_accounts')
-      .select('is_admin')
-      .eq('id', userId)
+      .from("customer_accounts")
+      .select("is_admin")
+      .eq("id", userId)
       .single();
 
     if (error) {
-      console.error('Error checking admin status:', error);
+      console.error("Error checking admin status:", error);
       return false;
     }
 
     return data?.is_admin === true;
   } catch (error) {
-    console.error('Error in isAdmin check:', error);
+    console.error("Error in isAdmin check:", error);
     return false;
   }
+}
+
+/**
+ * Set impersonation mode (admin only)
+ * @param {string} customerId - Customer UUID to impersonate
+ * @returns {Object} { success: boolean, error?: string }
+ */
+export async function setImpersonation(customerId) {
+  // Verify current user is admin
+  const { user } = await getCurrentUser();
+  if (!user) {
+    return { success: false, error: "Not authenticated" };
+  }
+
+  const adminStatus = await isAdmin(user.id);
+  if (!adminStatus) {
+    console.error("Non-admin attempted impersonation");
+    return { success: false, error: "Unauthorized" };
+  }
+
+  sessionStorage.setItem("impersonatedCustomerId", customerId);
+  return { success: true };
+}
+
+/**
+ * Clear impersonation mode
+ */
+export function clearImpersonation() {
+  sessionStorage.removeItem("impersonatedCustomerId");
+}
+
+/**
+ * Get the effective user for data queries
+ * Returns impersonated customer if admin is impersonating, otherwise returns actual user
+ * @returns {Object} { user, error, isImpersonated?: boolean }
+ */
+export async function getEffectiveUser() {
+  const impersonatedId = sessionStorage.getItem("impersonatedCustomerId");
+
+  if (impersonatedId) {
+    // Verify current user is still admin
+    const { user: actualUser } = await getCurrentUser();
+    if (!actualUser) {
+      clearImpersonation();
+      return { user: null, error: "Not authenticated" };
+    }
+
+    const adminStatus = await isAdmin(actualUser.id);
+    if (!adminStatus) {
+      // Security: Non-admin shouldn't have impersonation state
+      console.warn("Non-admin had impersonation state - clearing");
+      clearImpersonation();
+      return { user: actualUser, error: null };
+    }
+
+    // Fetch impersonated customer from customers table
+    const { data: customer, error } = await supabase
+      .from("customers")
+      .select("*")
+      .eq("id", impersonatedId)
+      .single();
+
+    if (error) {
+      console.error("Failed to load impersonated customer:", error);
+      clearImpersonation();
+      return { user: actualUser, error: "Impersonation failed" };
+    }
+
+    // Return customer as user with impersonation flag
+    return { user: customer, error: null, isImpersonated: true };
+  }
+
+  // No impersonation - return actual user
+  return getCurrentUser();
 }
 
 /**
@@ -266,18 +349,18 @@ export async function getUserBoats(userId) {
     if (adminStatus) {
       // Admin: return ALL boats
       const { data, error } = await supabase
-        .from('boats')
-        .select('*')
-        .order('name', { ascending: true });
+        .from("boats")
+        .select("*")
+        .order("name", { ascending: true });
 
       if (error) throw error;
 
       // Format boats with admin flag
-      const boats = data.map(boat => ({
+      const boats = data.map((boat) => ({
         ...boat,
         isPrimary: false, // Admin doesn't have a primary boat
         grantedAt: null,
-        isAdminView: true // Flag to indicate admin view
+        isAdminView: true, // Flag to indicate admin view
       }));
 
       return { boats, error: null };
@@ -285,25 +368,27 @@ export async function getUserBoats(userId) {
 
     // Regular user: return only boats with access
     const { data, error } = await supabase
-      .from('customer_boat_access')
-      .select(`
+      .from("customer_boat_access")
+      .select(
+        `
         *,
         boat:boats(*)
-      `)
-      .eq('customer_account_id', userId);
+      `,
+      )
+      .eq("customer_account_id", userId);
 
     if (error) throw error;
 
-    const boats = data.map(access => ({
+    const boats = data.map((access) => ({
       ...access.boat,
       isPrimary: access.is_primary,
       grantedAt: access.granted_at,
-      isAdminView: false
+      isAdminView: false,
     }));
 
     return { boats, error: null };
   } catch (error) {
-    console.error('Get boats error:', error);
+    console.error("Get boats error:", error);
     return { boats: [], error: error.message };
   }
 }
@@ -318,27 +403,27 @@ export async function grantBoatAccessBySlug(userId, boatSlug) {
   try {
     // Find boat by slug
     const { data: boat, error: boatError } = await supabase
-      .from('boats')
-      .select('id')
-      .eq('slug', boatSlug)
+      .from("boats")
+      .select("id")
+      .eq("slug", boatSlug)
       .single();
 
-    if (boatError) throw new Error('Boat not found');
+    if (boatError) throw new Error("Boat not found");
 
     // Grant access
     const { error: accessError } = await supabase
-      .from('customer_boat_access')
+      .from("customer_boat_access")
       .insert({
         customer_account_id: userId,
         boat_id: boat.id,
-        is_primary: true
+        is_primary: true,
       });
 
     if (accessError) throw accessError;
 
     return { success: true, error: null };
   } catch (error) {
-    console.error('Grant access error:', error);
+    console.error("Grant access error:", error);
     return { success: false, error: error.message };
   }
 }
@@ -350,11 +435,11 @@ export async function grantBoatAccessBySlug(userId, boatSlug) {
 async function updateLastLogin(userId) {
   try {
     await supabase
-      .from('customer_accounts')
+      .from("customer_accounts")
       .update({ last_login_at: new Date().toISOString() })
-      .eq('id', userId);
+      .eq("id", userId);
   } catch (error) {
-    console.error('Update last login error:', error);
+    console.error("Update last login error:", error);
   }
 }
 
@@ -376,16 +461,16 @@ export function onAuthStateChange(callback) {
 export async function getCustomerAccount(userId) {
   try {
     const { data, error } = await supabase
-      .from('customer_accounts')
-      .select('*')
-      .eq('id', userId)
+      .from("customer_accounts")
+      .select("*")
+      .eq("id", userId)
       .single();
 
     if (error) throw error;
 
     return { account: data, error: null };
   } catch (error) {
-    console.error('Get account error:', error);
+    console.error("Get account error:", error);
     return { account: null, error: error.message };
   }
 }
@@ -399,15 +484,15 @@ export async function getCustomerAccount(userId) {
 export async function updateNotificationPreferences(userId, preferences) {
   try {
     const { error } = await supabase
-      .from('customer_accounts')
+      .from("customer_accounts")
       .update({ notification_preferences: preferences })
-      .eq('id', userId);
+      .eq("id", userId);
 
     if (error) throw error;
 
     return { success: true, error: null };
   } catch (error) {
-    console.error('Update preferences error:', error);
+    console.error("Update preferences error:", error);
     return { success: false, error: error.message };
   }
 }

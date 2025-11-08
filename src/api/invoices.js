@@ -3,9 +3,10 @@
  * Handles all invoice-related data access
  */
 
-import { createSupabaseClient } from '../lib/supabase.js';
+import { createSupabaseClient } from "../lib/supabase.js";
 
-const supabase = createSupabaseClient();
+// createSupabaseClient is the configured client instance, not a factory function
+const supabase = createSupabaseClient;
 
 /**
  * Load invoices for a boat
@@ -18,22 +19,22 @@ export async function loadInvoices(boatId, customerId, filters = {}) {
   try {
     // Query by customer_id to get all invoices (both boat-specific and customer-level)
     let query = supabase
-      .from('invoices')
+      .from("invoices")
       .select(`*`)
-      .eq('customer_id', customerId)
-      .order('issued_at', { ascending: false });
+      .eq("customer_id", customerId)
+      .order("issued_at", { ascending: false });
 
     // Apply filters
     if (filters.status) {
-      query = query.eq('status', filters.status);
+      query = query.eq("status", filters.status);
     }
 
     if (filters.startDate) {
-      query = query.gte('issued_at', filters.startDate);
+      query = query.gte("issued_at", filters.startDate);
     }
 
     if (filters.endDate) {
-      query = query.lte('issued_at', filters.endDate);
+      query = query.lte("issued_at", filters.endDate);
     }
 
     const { data, error } = await query;
@@ -42,7 +43,7 @@ export async function loadInvoices(boatId, customerId, filters = {}) {
 
     return { invoices: data || [], error: null };
   } catch (error) {
-    console.error('Load invoices error:', error);
+    console.error("Load invoices error:", error);
     return { invoices: [], error: error.message };
   }
 }
@@ -55,19 +56,21 @@ export async function loadInvoices(boatId, customerId, filters = {}) {
 export async function getInvoice(invoiceId) {
   try {
     const { data, error } = await supabase
-      .from('invoices')
-      .select(`
+      .from("invoices")
+      .select(
+        `
         *,
         boat:boats(name, slug)
-      `)
-      .eq('id', invoiceId)
+      `,
+      )
+      .eq("id", invoiceId)
       .single();
 
     if (error) throw error;
 
     return { invoice: data, error: null };
   } catch (error) {
-    console.error('Get invoice error:', error);
+    console.error("Get invoice error:", error);
     return { invoice: null, error: error.message };
   }
 }
@@ -81,25 +84,32 @@ export async function getInvoice(invoiceId) {
 export async function getInvoiceStats(boatId, customerId) {
   try {
     const { data: invoices, error } = await supabase
-      .from('invoices')
-      .select('amount, status')
-      .eq('customer_id', customerId);
+      .from("invoices")
+      .select("amount, status")
+      .eq("customer_id", customerId);
 
     if (error) throw error;
 
     const stats = {
       total: invoices.length,
-      paid: invoices.filter(i => i.status === 'paid').length,
-      pending: invoices.filter(i => i.status === 'pending').length,
-      overdue: invoices.filter(i => i.status === 'overdue').length,
-      totalAmount: invoices.reduce((sum, i) => sum + parseFloat(i.amount || 0), 0),
-      paidAmount: invoices.filter(i => i.status === 'paid').reduce((sum, i) => sum + parseFloat(i.amount || 0), 0),
-      outstandingAmount: invoices.filter(i => i.status !== 'paid').reduce((sum, i) => sum + parseFloat(i.amount || 0), 0)
+      paid: invoices.filter((i) => i.status === "paid").length,
+      pending: invoices.filter((i) => i.status === "pending").length,
+      overdue: invoices.filter((i) => i.status === "overdue").length,
+      totalAmount: invoices.reduce(
+        (sum, i) => sum + parseFloat(i.amount || 0),
+        0,
+      ),
+      paidAmount: invoices
+        .filter((i) => i.status === "paid")
+        .reduce((sum, i) => sum + parseFloat(i.amount || 0), 0),
+      outstandingAmount: invoices
+        .filter((i) => i.status !== "paid")
+        .reduce((sum, i) => sum + parseFloat(i.amount || 0), 0),
     };
 
     return { stats, error: null };
   } catch (error) {
-    console.error('Get invoice stats error:', error);
+    console.error("Get invoice stats error:", error);
     return { stats: null, error: error.message };
   }
 }
@@ -114,17 +124,17 @@ export async function getInvoiceStats(boatId, customerId) {
 export async function getRecentInvoices(boatId, customerId, limit = 3) {
   try {
     const { data, error } = await supabase
-      .from('invoices')
-      .select('*')
-      .eq('customer_id', customerId)
-      .order('issued_at', { ascending: false })
+      .from("invoices")
+      .select("*")
+      .eq("customer_id", customerId)
+      .order("issued_at", { ascending: false })
       .limit(limit);
 
     if (error) throw error;
 
     return { invoices: data || [], error: null };
   } catch (error) {
-    console.error('Get recent invoices error:', error);
+    console.error("Get recent invoices error:", error);
     return { invoices: [], error: error.message };
   }
 }
@@ -135,9 +145,9 @@ export async function getRecentInvoices(boatId, customerId, limit = 3) {
  * @returns {string}
  */
 export function formatCurrency(amount) {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD'
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
   }).format(amount);
 }
 
@@ -147,11 +157,11 @@ export function formatCurrency(amount) {
  * @returns {string}
  */
 export function formatDate(dateString) {
-  if (!dateString) return 'N/A';
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
+  if (!dateString) return "N/A";
+  return new Date(dateString).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
   });
 }
 
@@ -162,12 +172,12 @@ export function formatDate(dateString) {
  */
 export function getStatusClass(status) {
   const statusClasses = {
-    'pending': 'status-pending',
-    'paid': 'status-paid',
-    'overdue': 'status-overdue',
-    'cancelled': 'status-cancelled'
+    pending: "status-pending",
+    paid: "status-paid",
+    overdue: "status-overdue",
+    cancelled: "status-cancelled",
   };
-  return statusClasses[status] || 'status-default';
+  return statusClasses[status] || "status-default";
 }
 
 /**
@@ -177,10 +187,10 @@ export function getStatusClass(status) {
  */
 export function getStatusText(status) {
   const statusText = {
-    'pending': 'Pending',
-    'paid': 'Paid',
-    'overdue': 'Overdue',
-    'cancelled': 'Cancelled'
+    pending: "Pending",
+    paid: "Paid",
+    overdue: "Overdue",
+    cancelled: "Cancelled",
   };
   return statusText[status] || status;
 }
@@ -196,11 +206,11 @@ export function calculateCategoryTotals(lineItems) {
     parts: 0,
     anodes: 0,
     travel: 0,
-    other: 0
+    other: 0,
   };
 
-  lineItems.forEach(item => {
-    const category = item.category || 'other';
+  lineItems.forEach((item) => {
+    const category = item.category || "other";
     const amount = parseFloat(item.amount || 0);
     if (totals.hasOwnProperty(category)) {
       totals[category] += amount;

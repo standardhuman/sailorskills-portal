@@ -6,7 +6,8 @@
 import { createSupabaseClient } from "../lib/supabase.js";
 import { getCurrentUser, isAdmin } from "../auth/auth.js";
 
-const supabase = createSupabaseClient();
+// createSupabaseClient is the configured client instance, not a factory function
+const supabase = createSupabaseClient;
 
 /**
  * Get all customers for admin selector

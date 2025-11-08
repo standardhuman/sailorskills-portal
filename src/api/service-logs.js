@@ -5,7 +5,8 @@
 
 import { createSupabaseClient } from "../lib/supabase.js";
 
-const supabase = createSupabaseClient();
+// createSupabaseClient is the configured client instance, not a factory function
+const supabase = createSupabaseClient;
 
 /**
  * Load service logs for a boat

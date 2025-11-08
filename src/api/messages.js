@@ -3,9 +3,10 @@
  * Handles all messaging-related data access
  */
 
-import { createSupabaseClient } from '../lib/supabase.js';
+import { createSupabaseClient } from "../lib/supabase.js";
 
-const supabase = createSupabaseClient();
+// createSupabaseClient is the configured client instance, not a factory function
+const supabase = createSupabaseClient;
 
 /**
  * Load all conversations for a boat
@@ -16,30 +17,30 @@ const supabase = createSupabaseClient();
 export async function loadConversations(boatId) {
   try {
     const { data: messages, error } = await supabase
-      .from('customer_messages')
-      .select('*')
-      .eq('boat_id', boatId)
-      .order('created_at', { ascending: false });
+      .from("customer_messages")
+      .select("*")
+      .eq("boat_id", boatId)
+      .order("created_at", { ascending: false });
 
     if (error) throw error;
 
     // Group messages by service_log_id (or null for general)
     const grouped = {};
-    messages.forEach(msg => {
-      const key = msg.service_log_id || 'general';
+    messages.forEach((msg) => {
+      const key = msg.service_log_id || "general";
       if (!grouped[key]) {
         grouped[key] = {
           id: key,
           service_log_id: msg.service_log_id,
           messages: [],
           last_message_at: msg.created_at,
-          unread_count: 0
+          unread_count: 0,
         };
       }
       grouped[key].messages.push(msg);
 
       // Count unread (messages from admin that haven't been read)
-      if (msg.sender_type === 'admin' && !msg.read_at) {
+      if (msg.sender_type === "admin" && !msg.read_at) {
         grouped[key].unread_count++;
       }
     });
@@ -48,7 +49,7 @@ export async function loadConversations(boatId) {
 
     return { conversations, error: null };
   } catch (error) {
-    console.error('Load conversations error:', error);
+    console.error("Load conversations error:", error);
     return { conversations: [], error: error.message };
   }
 }
@@ -62,15 +63,15 @@ export async function loadConversations(boatId) {
 export async function loadThread(boatId, serviceLogId = null) {
   try {
     let query = supabase
-      .from('customer_messages')
-      .select('*')
-      .eq('boat_id', boatId)
-      .order('created_at', { ascending: true });
+      .from("customer_messages")
+      .select("*")
+      .eq("boat_id", boatId)
+      .order("created_at", { ascending: true });
 
     if (serviceLogId) {
-      query = query.eq('service_log_id', serviceLogId);
+      query = query.eq("service_log_id", serviceLogId);
     } else {
-      query = query.is('service_log_id', null);
+      query = query.is("service_log_id", null);
     }
 
     const { data, error } = await query;
@@ -79,7 +80,7 @@ export async function loadThread(boatId, serviceLogId = null) {
 
     return { messages: data || [], error: null };
   } catch (error) {
-    console.error('Load thread error:', error);
+    console.error("Load thread error:", error);
     return { messages: [], error: error.message };
   }
 }
@@ -93,17 +94,23 @@ export async function loadThread(boatId, serviceLogId = null) {
  * @param {string|null} serviceLogId - Optional service log ID
  * @returns {Promise<{message, error}>}
  */
-export async function sendMessage(boatId, messageText, senderAccountId, attachments = [], serviceLogId = null) {
+export async function sendMessage(
+  boatId,
+  messageText,
+  senderAccountId,
+  attachments = [],
+  serviceLogId = null,
+) {
   try {
     const { data, error } = await supabase
-      .from('customer_messages')
+      .from("customer_messages")
       .insert({
         boat_id: boatId,
         service_log_id: serviceLogId,
-        sender_type: 'customer',
+        sender_type: "customer",
         sender_account_id: senderAccountId,
         message_text: messageText,
-        attachments: attachments
+        attachments: attachments,
       })
       .select()
       .single();
@@ -112,7 +119,7 @@ export async function sendMessage(boatId, messageText, senderAccountId, attachme
 
     return { message: data, error: null };
   } catch (error) {
-    console.error('Send message error:', error);
+    console.error("Send message error:", error);
     return { message: null, error: error.message };
   }
 }
@@ -125,17 +132,17 @@ export async function sendMessage(boatId, messageText, senderAccountId, attachme
 export async function markAsRead(messageIds) {
   try {
     const { error } = await supabase
-      .from('customer_messages')
+      .from("customer_messages")
       .update({ read_at: new Date().toISOString() })
-      .in('id', messageIds)
-      .eq('sender_type', 'admin') // Only mark admin messages as read
-      .is('read_at', null);
+      .in("id", messageIds)
+      .eq("sender_type", "admin") // Only mark admin messages as read
+      .is("read_at", null);
 
     if (error) throw error;
 
     return { success: true, error: null };
   } catch (error) {
-    console.error('Mark as read error:', error);
+    console.error("Mark as read error:", error);
     return { success: false, error: error.message };
   }
 }
@@ -148,17 +155,17 @@ export async function markAsRead(messageIds) {
 export async function getUnreadCount(boatId) {
   try {
     const { count, error } = await supabase
-      .from('customer_messages')
-      .select('*', { count: 'exact', head: true })
-      .eq('boat_id', boatId)
-      .eq('sender_type', 'admin')
-      .is('read_at', null);
+      .from("customer_messages")
+      .select("*", { count: "exact", head: true })
+      .eq("boat_id", boatId)
+      .eq("sender_type", "admin")
+      .is("read_at", null);
 
     if (error) throw error;
 
     return { count: count || 0, error: null };
   } catch (error) {
-    console.error('Get unread count error:', error);
+    console.error("Get unread count error:", error);
     return { count: 0, error: error.message };
   }
 }
@@ -174,50 +181,50 @@ export async function uploadAttachment(file, boatId) {
     // Validate file
     const maxSize = 10 * 1024 * 1024; // 10MB
     if (file.size > maxSize) {
-      throw new Error('File too large (max 10MB)');
+      throw new Error("File too large (max 10MB)");
     }
 
     const allowedTypes = [
-      'image/jpeg',
-      'image/png',
-      'image/gif',
-      'application/pdf',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      "image/jpeg",
+      "image/png",
+      "image/gif",
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     ];
 
     if (!allowedTypes.includes(file.type)) {
-      throw new Error('File type not allowed');
+      throw new Error("File type not allowed");
     }
 
     // Generate unique file name
     const timestamp = Date.now();
-    const fileExt = file.name.split('.').pop();
+    const fileExt = file.name.split(".").pop();
     const fileName = `${timestamp}-${Math.random().toString(36).substring(7)}.${fileExt}`;
     const filePath = `${boatId}/${fileName}`;
 
     // Upload to Supabase Storage
     const { data, error } = await supabase.storage
-      .from('customer-attachments')
+      .from("customer-attachments")
       .upload(filePath, file);
 
     if (error) throw error;
 
     // Get public URL
     const { data: urlData } = supabase.storage
-      .from('customer-attachments')
+      .from("customer-attachments")
       .getPublicUrl(filePath);
 
     const attachment = {
       url: urlData.publicUrl,
       filename: file.name,
       size: file.size,
-      type: file.type
+      type: file.type,
     };
 
     return { attachment, error: null };
   } catch (error) {
-    console.error('Upload attachment error:', error);
+    console.error("Upload attachment error:", error);
     return { attachment: null, error: error.message };
   }
 }
@@ -232,16 +239,16 @@ export function subscribeToMessages(boatId, callback) {
   const subscription = supabase
     .channel(`messages:${boatId}`)
     .on(
-      'postgres_changes',
+      "postgres_changes",
       {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'customer_messages',
-        filter: `boat_id=eq.${boatId}`
+        event: "INSERT",
+        schema: "public",
+        table: "customer_messages",
+        filter: `boat_id=eq.${boatId}`,
       },
       (payload) => {
         callback(payload.new);
-      }
+      },
     )
     .subscribe();
 
@@ -271,15 +278,15 @@ export function formatMessageTime(timestamp) {
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
 
-  if (diffMins < 1) return 'Just now';
-  if (diffMins < 60) return `${diffMins} min${diffMins > 1 ? 's' : ''} ago`;
-  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-  if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+  if (diffMins < 1) return "Just now";
+  if (diffMins < 60) return `${diffMins} min${diffMins > 1 ? "s" : ""} ago`;
+  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+  if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
 
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
   });
 }
 
@@ -300,5 +307,5 @@ export function formatFileSize(bytes) {
  * @returns {boolean}
  */
 export function isImage(type) {
-  return type && type.startsWith('image/');
+  return type && type.startsWith("image/");
 }

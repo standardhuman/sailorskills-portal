@@ -3,9 +3,10 @@
  * Handles all service request-related data access
  */
 
-import { createSupabaseClient } from '../lib/supabase.js';
+import { createSupabaseClient } from "../lib/supabase.js";
 
-const supabase = createSupabaseClient();
+// createSupabaseClient is the configured client instance, not a factory function
+const supabase = createSupabaseClient;
 
 /**
  * Submit a service inquiry
@@ -15,22 +16,24 @@ const supabase = createSupabaseClient();
  */
 export async function submitInquiry(boatId, data) {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) {
-      throw new Error('Not authenticated');
+      throw new Error("Not authenticated");
     }
 
     const { data: request, error } = await supabase
-      .from('service_requests')
+      .from("service_requests")
       .insert({
         boat_id: boatId,
         customer_account_id: user.id,
-        request_type: 'inquiry',
+        request_type: "inquiry",
         service_type: data.serviceType,
-        priority: data.priority || 'normal',
+        priority: data.priority || "normal",
         notes: data.notes,
-        attachments: data.attachments || []
+        attachments: data.attachments || [],
       })
       .select()
       .single();
@@ -38,7 +41,7 @@ export async function submitInquiry(boatId, data) {
     if (error) throw error;
     return { request, error: null };
   } catch (error) {
-    console.error('Submit inquiry error:', error);
+    console.error("Submit inquiry error:", error);
     return { request: null, error: error.message };
   }
 }
@@ -51,24 +54,26 @@ export async function submitInquiry(boatId, data) {
  */
 export async function submitBooking(boatId, data) {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) {
-      throw new Error('Not authenticated');
+      throw new Error("Not authenticated");
     }
 
     const { data: request, error } = await supabase
-      .from('service_requests')
+      .from("service_requests")
       .insert({
         boat_id: boatId,
         customer_account_id: user.id,
-        request_type: 'booking',
+        request_type: "booking",
         service_type: data.serviceType,
-        priority: data.priority || 'normal',
+        priority: data.priority || "normal",
         preferred_date: data.preferredDate,
         preferred_time: data.preferredTime,
         notes: data.notes,
-        attachments: data.attachments || []
+        attachments: data.attachments || [],
       })
       .select()
       .single();
@@ -76,7 +81,7 @@ export async function submitBooking(boatId, data) {
     if (error) throw error;
     return { request, error: null };
   } catch (error) {
-    console.error('Submit booking error:', error);
+    console.error("Submit booking error:", error);
     return { request: null, error: error.message };
   }
 }
@@ -90,14 +95,14 @@ export async function submitBooking(boatId, data) {
 export async function loadServiceRequests(boatId, filters = {}) {
   try {
     let query = supabase
-      .from('service_requests')
-      .select('*')
-      .eq('boat_id', boatId)
-      .order('created_at', { ascending: false });
+      .from("service_requests")
+      .select("*")
+      .eq("boat_id", boatId)
+      .order("created_at", { ascending: false });
 
     // Apply filters
     if (filters.status) {
-      query = query.eq('status', filters.status);
+      query = query.eq("status", filters.status);
     }
 
     const { data, error } = await query;
@@ -106,7 +111,7 @@ export async function loadServiceRequests(boatId, filters = {}) {
 
     return { requests: data || [], error: null };
   } catch (error) {
-    console.error('Load service requests error:', error);
+    console.error("Load service requests error:", error);
     return { requests: [], error: error.message };
   }
 }
@@ -119,20 +124,22 @@ export async function loadServiceRequests(boatId, filters = {}) {
 export async function getRequestDetails(requestId) {
   try {
     const { data, error } = await supabase
-      .from('service_requests')
-      .select(`
+      .from("service_requests")
+      .select(
+        `
         *,
         boat:boats(name, slug),
         customer_account:customer_accounts(email)
-      `)
-      .eq('id', requestId)
+      `,
+      )
+      .eq("id", requestId)
       .single();
 
     if (error) throw error;
 
     return { request: data, error: null };
   } catch (error) {
-    console.error('Get request details error:', error);
+    console.error("Get request details error:", error);
     return { request: null, error: error.message };
   }
 }
@@ -145,38 +152,40 @@ export async function getRequestDetails(requestId) {
  */
 export async function uploadRequestPhoto(file, boatId) {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) {
-      throw new Error('Not authenticated');
+      throw new Error("Not authenticated");
     }
 
     // Generate unique filename
     const timestamp = Date.now();
-    const fileExt = file.name.split('.').pop();
+    const fileExt = file.name.split(".").pop();
     const fileName = `${boatId}/${timestamp}.${fileExt}`;
 
     // Upload to storage
     const { data, error: uploadError } = await supabase.storage
-      .from('customer-attachments')
+      .from("customer-attachments")
       .upload(fileName, file);
 
     if (uploadError) throw uploadError;
 
     // Get public URL
-    const { data: { publicUrl } } = supabase.storage
-      .from('customer-attachments')
-      .getPublicUrl(fileName);
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from("customer-attachments").getPublicUrl(fileName);
 
     return {
       url: publicUrl,
       filename: file.name,
       size: file.size,
       type: file.type,
-      error: null
+      error: null,
     };
   } catch (error) {
-    console.error('Upload photo error:', error);
+    console.error("Upload photo error:", error);
     return { url: null, error: error.message };
   }
 }
@@ -189,24 +198,26 @@ export async function uploadRequestPhoto(file, boatId) {
 export async function getRequestStats(boatId) {
   try {
     const { data: requests, error } = await supabase
-      .from('service_requests')
-      .select('status, priority, created_at')
-      .eq('boat_id', boatId);
+      .from("service_requests")
+      .select("status, priority, created_at")
+      .eq("boat_id", boatId);
 
     if (error) throw error;
 
     const stats = {
       total: requests.length,
-      pending: requests.filter(r => r.status === 'pending').length,
-      scheduled: requests.filter(r => r.status === 'scheduled').length,
-      completed: requests.filter(r => r.status === 'completed').length,
-      cancelled: requests.filter(r => r.status === 'cancelled').length,
-      urgent: requests.filter(r => r.priority === 'urgent' && r.status === 'pending').length
+      pending: requests.filter((r) => r.status === "pending").length,
+      scheduled: requests.filter((r) => r.status === "scheduled").length,
+      completed: requests.filter((r) => r.status === "completed").length,
+      cancelled: requests.filter((r) => r.status === "cancelled").length,
+      urgent: requests.filter(
+        (r) => r.priority === "urgent" && r.status === "pending",
+      ).length,
     };
 
     return { stats, error: null };
   } catch (error) {
-    console.error('Get request stats error:', error);
+    console.error("Get request stats error:", error);
     return { stats: null, error: error.message };
   }
 }
@@ -217,11 +228,11 @@ export async function getRequestStats(boatId) {
  * @returns {string}
  */
 export function formatDate(dateString) {
-  if (!dateString) return 'N/A';
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
+  if (!dateString) return "N/A";
+  return new Date(dateString).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
   });
 }
 
@@ -232,7 +243,7 @@ export function formatDate(dateString) {
  * @returns {string}
  */
 export function formatDateTime(dateString, timeString) {
-  if (!dateString) return 'N/A';
+  if (!dateString) return "N/A";
   const formattedDate = formatDate(dateString);
   if (timeString) {
     return `${formattedDate} at ${timeString}`;
@@ -247,12 +258,12 @@ export function formatDateTime(dateString, timeString) {
  */
 export function getStatusClass(status) {
   const statusClasses = {
-    'pending': 'status-pending',
-    'scheduled': 'status-scheduled',
-    'completed': 'status-completed',
-    'cancelled': 'status-cancelled'
+    pending: "status-pending",
+    scheduled: "status-scheduled",
+    completed: "status-completed",
+    cancelled: "status-cancelled",
   };
-  return statusClasses[status] || 'status-default';
+  return statusClasses[status] || "status-default";
 }
 
 /**
@@ -262,10 +273,10 @@ export function getStatusClass(status) {
  */
 export function getStatusText(status) {
   const statusText = {
-    'pending': 'Pending Review',
-    'scheduled': 'Scheduled',
-    'completed': 'Completed',
-    'cancelled': 'Cancelled'
+    pending: "Pending Review",
+    scheduled: "Scheduled",
+    completed: "Completed",
+    cancelled: "Cancelled",
   };
   return statusText[status] || status;
 }
@@ -277,12 +288,12 @@ export function getStatusText(status) {
  */
 export function getPriorityClass(priority) {
   const priorityClasses = {
-    'low': 'priority-low',
-    'normal': 'priority-normal',
-    'high': 'priority-high',
-    'urgent': 'priority-urgent'
+    low: "priority-low",
+    normal: "priority-normal",
+    high: "priority-high",
+    urgent: "priority-urgent",
   };
-  return priorityClasses[priority] || 'priority-normal';
+  return priorityClasses[priority] || "priority-normal";
 }
 
 /**
@@ -292,10 +303,10 @@ export function getPriorityClass(priority) {
  */
 export function getPriorityText(priority) {
   const priorityText = {
-    'low': 'Low',
-    'normal': 'Normal',
-    'high': 'High',
-    'urgent': 'Urgent'
+    low: "Low",
+    normal: "Normal",
+    high: "High",
+    urgent: "Urgent",
   };
   return priorityText[priority] || priority;
 }
@@ -307,12 +318,12 @@ export function getPriorityText(priority) {
  */
 export function getServiceTypeDisplay(serviceType) {
   const serviceTypes = {
-    'bottom-cleaning': 'Bottom Cleaning',
-    'anode-replacement': 'Anode Replacement',
-    'general-maintenance': 'General Maintenance',
-    'emergency-repair': 'Emergency Repair',
-    'inspection': 'Inspection',
-    'other': 'Other Service'
+    "bottom-cleaning": "Bottom Cleaning",
+    "anode-replacement": "Anode Replacement",
+    "general-maintenance": "General Maintenance",
+    "emergency-repair": "Emergency Repair",
+    inspection: "Inspection",
+    other: "Other Service",
   };
   return serviceTypes[serviceType] || serviceType;
 }

@@ -3,9 +3,10 @@
  * Handles all account management and settings operations
  */
 
-import { createSupabaseClient } from '../lib/supabase.js';
+import { createSupabaseClient } from "../lib/supabase.js";
 
-const supabase = createSupabaseClient();
+// createSupabaseClient is the configured client instance, not a factory function
+const supabase = createSupabaseClient;
 
 /**
  * Get current account information
@@ -13,23 +14,25 @@ const supabase = createSupabaseClient();
  */
 export async function getAccountInfo() {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) {
-      throw new Error('Not authenticated');
+      throw new Error("Not authenticated");
     }
 
     const { data, error } = await supabase
-      .from('customer_accounts')
-      .select('*')
-      .eq('id', user.id)
+      .from("customer_accounts")
+      .select("*")
+      .eq("id", user.id)
       .single();
 
     if (error) throw error;
 
     return { account: data, error: null };
   } catch (error) {
-    console.error('Get account info error:', error);
+    console.error("Get account info error:", error);
     return { account: null, error: error.message };
   }
 }
@@ -42,7 +45,7 @@ export async function getAccountInfo() {
 export async function updateEmail(newEmail) {
   try {
     const { data, error } = await supabase.auth.updateUser({
-      email: newEmail
+      email: newEmail,
     });
 
     if (error) throw error;
@@ -52,7 +55,7 @@ export async function updateEmail(newEmail) {
 
     return { success: true, error: null, requiresVerification: true };
   } catch (error) {
-    console.error('Update email error:', error);
+    console.error("Update email error:", error);
     return { success: false, error: error.message };
   }
 }
@@ -64,33 +67,35 @@ export async function updateEmail(newEmail) {
  */
 export async function updatePhone(newPhone) {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) {
-      throw new Error('Not authenticated');
+      throw new Error("Not authenticated");
     }
 
     // Update phone in customer_accounts if we add that field
     // For now, we'll update it in the customers table via the linked customer
     const { data: boats } = await supabase
-      .from('customer_boat_access')
-      .select('boat:boats(customer_id)')
-      .eq('customer_account_id', user.id)
+      .from("customer_boat_access")
+      .select("boat:boats(customer_id)")
+      .eq("customer_account_id", user.id)
       .limit(1)
       .single();
 
     if (boats?.boat?.customer_id) {
       const { error } = await supabase
-        .from('customers')
+        .from("customers")
         .update({ phone: newPhone })
-        .eq('id', boats.boat.customer_id);
+        .eq("id", boats.boat.customer_id);
 
       if (error) throw error;
     }
 
     return { success: true, error: null };
   } catch (error) {
-    console.error('Update phone error:', error);
+    console.error("Update phone error:", error);
     return { success: false, error: error.message };
   }
 }
@@ -103,14 +108,14 @@ export async function updatePhone(newPhone) {
 export async function changePassword(newPassword) {
   try {
     const { data, error } = await supabase.auth.updateUser({
-      password: newPassword
+      password: newPassword,
     });
 
     if (error) throw error;
 
     return { success: true, error: null };
   } catch (error) {
-    console.error('Change password error:', error);
+    console.error("Change password error:", error);
     return { success: false, error: error.message };
   }
 }
@@ -121,23 +126,25 @@ export async function changePassword(newPassword) {
  */
 export async function getNotificationPreferences() {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) {
-      throw new Error('Not authenticated');
+      throw new Error("Not authenticated");
     }
 
     const { data, error } = await supabase
-      .from('customer_accounts')
-      .select('notification_preferences')
-      .eq('id', user.id)
+      .from("customer_accounts")
+      .select("notification_preferences")
+      .eq("id", user.id)
       .single();
 
     if (error) throw error;
 
     return { preferences: data.notification_preferences, error: null };
   } catch (error) {
-    console.error('Get notification preferences error:', error);
+    console.error("Get notification preferences error:", error);
     return { preferences: null, error: error.message };
   }
 }
@@ -149,22 +156,24 @@ export async function getNotificationPreferences() {
  */
 export async function updateNotificationPreferences(preferences) {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) {
-      throw new Error('Not authenticated');
+      throw new Error("Not authenticated");
     }
 
     const { error } = await supabase
-      .from('customer_accounts')
+      .from("customer_accounts")
       .update({ notification_preferences: preferences })
-      .eq('id', user.id);
+      .eq("id", user.id);
 
     if (error) throw error;
 
     return { success: true, error: null };
   } catch (error) {
-    console.error('Update notification preferences error:', error);
+    console.error("Update notification preferences error:", error);
     return { success: false, error: error.message };
   }
 }
@@ -175,15 +184,18 @@ export async function updateNotificationPreferences(preferences) {
  */
 export async function getAccessibleBoats() {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) {
-      throw new Error('Not authenticated');
+      throw new Error("Not authenticated");
     }
 
     const { data, error } = await supabase
-      .from('customer_boat_access')
-      .select(`
+      .from("customer_boat_access")
+      .select(
+        `
         *,
         boat:boats(
           id,
@@ -193,15 +205,16 @@ export async function getAccessibleBoats() {
           model,
           year
         )
-      `)
-      .eq('customer_account_id', user.id)
-      .order('is_primary', { ascending: false });
+      `,
+      )
+      .eq("customer_account_id", user.id)
+      .order("is_primary", { ascending: false });
 
     if (error) throw error;
 
     return { boats: data || [], error: null };
   } catch (error) {
-    console.error('Get accessible boats error:', error);
+    console.error("Get accessible boats error:", error);
     return { boats: [], error: error.message };
   }
 }
@@ -213,30 +226,32 @@ export async function getAccessibleBoats() {
  */
 export async function switchCurrentBoat(boatId) {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) {
-      throw new Error('Not authenticated');
+      throw new Error("Not authenticated");
     }
 
     // Verify user has access to this boat
     const { data, error } = await supabase
-      .from('customer_boat_access')
-      .select('boat_id')
-      .eq('customer_account_id', user.id)
-      .eq('boat_id', boatId)
+      .from("customer_boat_access")
+      .select("boat_id")
+      .eq("customer_account_id", user.id)
+      .eq("boat_id", boatId)
       .single();
 
     if (error || !data) {
-      throw new Error('You do not have access to this boat');
+      throw new Error("You do not have access to this boat");
     }
 
     // Store in localStorage
-    localStorage.setItem('currentBoatId', boatId);
+    localStorage.setItem("currentBoatId", boatId);
 
     return { success: true, error: null };
   } catch (error) {
-    console.error('Switch boat error:', error);
+    console.error("Switch boat error:", error);
     return { success: false, error: error.message };
   }
 }
@@ -247,16 +262,19 @@ export async function switchCurrentBoat(boatId) {
  */
 export async function getCustomerInfo() {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) {
-      throw new Error('Not authenticated');
+      throw new Error("Not authenticated");
     }
 
     // Get customer info from first boat access
     const { data: boatAccess } = await supabase
-      .from('customer_boat_access')
-      .select(`
+      .from("customer_boat_access")
+      .select(
+        `
         boat:boats(
           customer:customers(
             id,
@@ -266,8 +284,9 @@ export async function getCustomerInfo() {
             billing_address
           )
         )
-      `)
-      .eq('customer_account_id', user.id)
+      `,
+      )
+      .eq("customer_account_id", user.id)
       .limit(1)
       .single();
 
@@ -275,7 +294,7 @@ export async function getCustomerInfo() {
 
     return { customer: customer || null, error: null };
   } catch (error) {
-    console.error('Get customer info error:', error);
+    console.error("Get customer info error:", error);
     return { customer: null, error: error.message };
   }
 }
@@ -286,10 +305,12 @@ export async function getCustomerInfo() {
  */
 export async function deleteAccount() {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) {
-      throw new Error('Not authenticated');
+      throw new Error("Not authenticated");
     }
 
     // In production, you might want to:
@@ -305,7 +326,7 @@ export async function deleteAccount() {
 
     return { success: true, error: null };
   } catch (error) {
-    console.error('Delete account error:', error);
+    console.error("Delete account error:", error);
     return { success: false, error: error.message };
   }
 }
@@ -316,10 +337,10 @@ export async function deleteAccount() {
  * @returns {string}
  */
 export function formatPhoneNumber(phone) {
-  if (!phone) return 'N/A';
+  if (!phone) return "N/A";
 
   // Simple US phone number formatting
-  const cleaned = phone.replace(/\D/g, '');
+  const cleaned = phone.replace(/\D/g, "");
 
   if (cleaned.length === 10) {
     return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`;
@@ -345,20 +366,29 @@ export function isValidEmail(email) {
  */
 export function validatePassword(password) {
   if (!password || password.length < 8) {
-    return { valid: false, message: 'Password must be at least 8 characters' };
+    return { valid: false, message: "Password must be at least 8 characters" };
   }
 
   if (!/[A-Z]/.test(password)) {
-    return { valid: false, message: 'Password must contain at least one uppercase letter' };
+    return {
+      valid: false,
+      message: "Password must contain at least one uppercase letter",
+    };
   }
 
   if (!/[a-z]/.test(password)) {
-    return { valid: false, message: 'Password must contain at least one lowercase letter' };
+    return {
+      valid: false,
+      message: "Password must contain at least one lowercase letter",
+    };
   }
 
   if (!/[0-9]/.test(password)) {
-    return { valid: false, message: 'Password must contain at least one number' };
+    return {
+      valid: false,
+      message: "Password must contain at least one number",
+    };
   }
 
-  return { valid: true, message: 'Password is strong' };
+  return { valid: true, message: "Password is strong" };
 }

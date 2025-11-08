@@ -25,11 +25,18 @@ import {
 } from "../api/boat-data.js";
 import { formatDate, getConditionClass } from "../api/service-logs.js";
 
+console.log("[PORTAL DEBUG] Module loaded, starting authentication...");
+
 // Require authentication (redirects to SSO login)
 const isAuth = await requireAuth();
+console.log("[PORTAL DEBUG] requireAuth() returned:", isAuth);
+
 if (!isAuth) {
+  console.error("[PORTAL DEBUG] Authentication failed!");
   throw new Error("Not authenticated");
 }
+
+console.log("[PORTAL DEBUG] Authentication successful, continuing...");
 
 // Load user data
 let currentUser = null;
@@ -172,39 +179,78 @@ async function initCustomerSelector() {
  * Initialize portal
  */
 async function init() {
-  // Get current user
-  const { user, error: userError, isImpersonated } = await getEffectiveUser();
+  console.log("[PORTAL DEBUG] init() started");
 
-  if (userError || !user) {
-    console.error("Error loading user:", userError);
-    window.location.href = "/login.html";
-    return;
+  try {
+    // Get current user
+    console.log("[PORTAL DEBUG] Calling getEffectiveUser()...");
+    const { user, error: userError, isImpersonated } = await getEffectiveUser();
+    console.log("[PORTAL DEBUG] getEffectiveUser() returned:", {
+      user: user?.email,
+      error: userError,
+      isImpersonated,
+    });
+
+    if (userError || !user) {
+      console.error(
+        "[PORTAL DEBUG] User error or no user, redirecting to login",
+      );
+      console.error("Error loading user:", userError);
+      window.location.href = "/login.html";
+      return;
+    }
+
+    currentUser = user;
+    console.log("[PORTAL DEBUG] currentUser set:", currentUser.email);
+
+    // Initialize impersonation banner if active
+    console.log("[PORTAL DEBUG] Calling initImpersonationBanner()...");
+    await initImpersonationBanner();
+    console.log("[PORTAL DEBUG] initImpersonationBanner() completed");
+
+    // Check if user is admin
+    console.log("[PORTAL DEBUG] Calling isAdmin()...");
+    isAdminUser = await isAdmin(user.id);
+    console.log("[PORTAL DEBUG] isAdmin() returned:", isAdminUser);
+
+    // Display user email with admin badge if applicable
+    console.log("[PORTAL DEBUG] Updating user email display...");
+    const userEmailEl = document.getElementById("user-email");
+    if (isAdminUser) {
+      userEmailEl.innerHTML = `${user.email} <span style="display: inline-block; margin-left: 8px; padding: 2px 8px; background: #ff6b6b; color: white; border-radius: 4px; font-size: 11px; font-weight: 600;">ADMIN</span>`;
+      console.log("[PORTAL DEBUG] Admin badge added to email");
+    } else {
+      userEmailEl.textContent = user.email;
+      console.log("[PORTAL DEBUG] User email set (non-admin)");
+    }
+
+    // Load boats
+    console.log("[PORTAL DEBUG] Calling loadBoats()...");
+    await loadBoats();
+    console.log("[PORTAL DEBUG] loadBoats() completed");
+
+    // Initialize customer selector for admins
+    console.log("[PORTAL DEBUG] Calling initCustomerSelector()...");
+    await initCustomerSelector();
+    console.log("[PORTAL DEBUG] initCustomerSelector() completed");
+
+    // Update welcome message
+    console.log("[PORTAL DEBUG] Calling updateWelcomeMessage()...");
+    updateWelcomeMessage();
+    console.log("[PORTAL DEBUG] updateWelcomeMessage() completed");
+
+    console.log("[PORTAL DEBUG] init() COMPLETED SUCCESSFULLY");
+  } catch (error) {
+    console.error("[PORTAL DEBUG] FATAL ERROR in init():", error);
+    console.error("[PORTAL DEBUG] Error stack:", error.stack);
+
+    // Update UI to show error
+    const userEmailEl = document.getElementById("user-email");
+    if (userEmailEl) {
+      userEmailEl.textContent = `Error: ${error.message}`;
+      userEmailEl.style.color = "red";
+    }
   }
-
-  currentUser = user;
-
-  // Initialize impersonation banner if active
-  await initImpersonationBanner();
-
-  // Check if user is admin
-  isAdminUser = await isAdmin(user.id);
-
-  // Display user email with admin badge if applicable
-  const userEmailEl = document.getElementById("user-email");
-  if (isAdminUser) {
-    userEmailEl.innerHTML = `${user.email} <span style="display: inline-block; margin-left: 8px; padding: 2px 8px; background: #ff6b6b; color: white; border-radius: 4px; font-size: 11px; font-weight: 600;">ADMIN</span>`;
-  } else {
-    userEmailEl.textContent = user.email;
-  }
-
-  // Load boats
-  await loadBoats();
-
-  // Initialize customer selector for admins
-  await initCustomerSelector();
-
-  // Update welcome message
-  updateWelcomeMessage();
 }
 
 /**
@@ -960,8 +1006,21 @@ function setupEventListeners() {
 
 // Initialize portal
 async function startPortal() {
-  setupEventListeners();
-  await init();
+  console.log("[PORTAL DEBUG] startPortal() called");
+
+  try {
+    console.log("[PORTAL DEBUG] Setting up event listeners...");
+    setupEventListeners();
+    console.log("[PORTAL DEBUG] Event listeners set up, calling init()...");
+
+    await init();
+
+    console.log("[PORTAL DEBUG] startPortal() COMPLETED");
+  } catch (error) {
+    console.error("[PORTAL DEBUG] FATAL ERROR in startPortal():", error);
+    console.error("[PORTAL DEBUG] Error stack:", error.stack);
+  }
 }
 
+console.log("[PORTAL DEBUG] About to call startPortal()...");
 startPortal();

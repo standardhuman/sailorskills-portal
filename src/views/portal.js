@@ -28,21 +28,39 @@ import { formatDate, getConditionClass } from "../api/service-logs.js";
 
 console.log("[PORTAL DEBUG] Module loaded, starting authentication...");
 
-// Wait for Supabase to process session from URL hash (if present)
+// Process session from URL hash (if present)
 console.log("[PORTAL DEBUG] Checking if URL contains session hash...");
-if (window.location.hash) {
+if (window.location.hash.includes("access_token")) {
   console.log(
-    "[PORTAL DEBUG] Hash detected, waiting for Supabase to process session...",
+    "[PORTAL DEBUG] access_token detected in hash, manually setting session...",
   );
-  // Give Supabase time to process the hash and establish the session
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  console.log("[PORTAL DEBUG] Wait complete, checking session...");
 
-  // Verify session was established
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  console.log("[PORTAL DEBUG] Session after hash processing:", !!session);
+  // Extract the hash parameters
+  const hashParams = new URLSearchParams(window.location.hash.substring(1));
+  const accessToken = hashParams.get("access_token");
+  const refreshToken = hashParams.get("refresh_token");
+
+  console.log("[PORTAL DEBUG] Extracted tokens from hash:", {
+    hasAccessToken: !!accessToken,
+    hasRefreshToken: !!refreshToken,
+  });
+
+  if (accessToken) {
+    // Manually set the session using setSession
+    const { data, error } = await supabase.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken || "",
+    });
+
+    console.log("[PORTAL DEBUG] setSession result:", {
+      hasSession: !!data.session,
+      hasUser: !!data.user,
+      error: error?.message,
+    });
+
+    // Clean up the URL hash
+    window.history.replaceState(null, "", window.location.pathname);
+  }
 }
 
 // Require authentication (redirects to SSO login)

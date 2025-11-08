@@ -3,8 +3,11 @@
  * Main landing page for authenticated customers
  */
 
+// SSO Authentication from shared module
+import { requireCustomer } from "@sailorskills/shared/auth";
+
+// Portal-specific auth functions (impersonation, admin features)
 import {
-  requireAuth,
   getCurrentUser,
   getEffectiveUser,
   getUserBoats,
@@ -25,10 +28,10 @@ import {
 } from "../api/boat-data.js";
 import { formatDate, getConditionClass } from "../api/service-logs.js";
 
-// Require authentication
-const isAuth = await requireAuth();
-if (!isAuth) {
-  // requireAuth handles redirect
+// Require customer authentication (SSO)
+const auth = await requireCustomer();
+if (!auth) {
+  // requireCustomer handles redirect to SSO login
   throw new Error("Not authenticated");
 }
 

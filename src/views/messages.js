@@ -3,8 +3,11 @@
  * Two-way messaging with file attachments and real-time updates
  */
 
+// SSO Authentication from shared module
+import { requireCustomer } from "@sailorskills/shared/auth";
+
+// Portal-specific auth functions (impersonation, admin features)
 import {
-  requireAuth,
   getCurrentUser,
   getEffectiveUser,
   getUserBoats,
@@ -28,9 +31,9 @@ import {
   isImage,
 } from "../api/messages.js";
 
-// Require authentication
-const isAuth = await requireAuth();
-if (!isAuth) {
+// Require customer authentication (SSO)
+const auth = await requireCustomer();
+if (!auth) {
   throw new Error("Not authenticated");
 }
 

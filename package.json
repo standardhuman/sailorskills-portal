@@ -28,6 +28,7 @@
   "license": "UNLICENSED",
   "private": true,
   "dependencies": {
+    "@sailorskills/shared": "file:../sailorskills-shared",
     "@supabase/supabase-js": "^2.57.4",
     "dotenv": "^17.2.3",
     "pg": "^8.16.3"

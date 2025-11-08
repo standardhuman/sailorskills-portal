@@ -58,8 +58,8 @@ if (window.location.hash.includes("access_token")) {
       error: error?.message,
     });
 
-    // Clean up the URL hash
-    window.history.replaceState(null, "", window.location.pathname);
+    // DON'T clean up the hash yet - it can cause navigation issues
+    // We'll clean it up after the page fully initializes
   }
 }
 
@@ -1052,6 +1052,12 @@ async function startPortal() {
     await init();
 
     console.log("[PORTAL DEBUG] startPortal() COMPLETED");
+
+    // Now it's safe to clean up the URL hash (after everything is initialized)
+    if (window.location.hash.includes("access_token")) {
+      console.log("[PORTAL DEBUG] Cleaning up auth hash from URL...");
+      window.history.replaceState(null, "", window.location.pathname);
+    }
   } catch (error) {
     console.error("[PORTAL DEBUG] FATAL ERROR in startPortal():", error);
     console.error("[PORTAL DEBUG] Error stack:", error.stack);

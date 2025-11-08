@@ -2,12 +2,8 @@
  * Service History View
  * Customer-facing service history page
  */
-
-// SSO Authentication from shared module
-import { requireCustomer } from "@sailorskills/shared/auth";
-
-// Portal-specific auth functions (impersonation, admin features)
 import {
+  requireAuth,
   getCurrentUser,
   getEffectiveUser,
   getUserBoats,
@@ -27,9 +23,9 @@ import {
 } from "../api/service-logs.js";
 import { getBoatPlaylist, getPlaylistVideos } from "../api/boat-data.js";
 
-// Require customer authentication (SSO)
-const auth = await requireCustomer();
-if (!auth) {
+// Require authentication (redirects to SSO login)
+const isAuth = await requireAuth();
+if (!isAuth) {
   throw new Error("Not authenticated");
 }
 

@@ -2,12 +2,8 @@
  * Customer Portal - Account Settings View
  * Handles account management, profile updates, and preferences
  */
-
-// SSO Authentication from shared module
-import { requireCustomer } from "@sailorskills/shared/auth";
-
-// Portal-specific auth functions (impersonation, admin features)
 import {
+  requireAuth,
   getCurrentUser,
   getEffectiveUser,
   logout,
@@ -32,9 +28,9 @@ import {
   validatePassword,
 } from "../api/account.js";
 
-// Require customer authentication (SSO)
-const auth = await requireCustomer();
-if (!auth) {
+// Require authentication (redirects to SSO login)
+const isAuth = await requireAuth();
+if (!isAuth) {
   throw new Error("Not authenticated");
 }
 

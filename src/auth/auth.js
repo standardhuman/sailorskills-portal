@@ -5,10 +5,53 @@
 
 import { createClient } from "@supabase/supabase-js";
 
-// Create Supabase client
+/**
+ * Custom storage with SSO cookie support
+ */
+const customStorage = {
+  getItem: (key) => {
+    const localValue = localStorage.getItem(key);
+    if (localValue) return localValue;
+    // Fallback to cookie
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${key}=`);
+    if (parts.length === 2) {
+      return parts.pop().split(";").shift();
+    }
+    return null;
+  },
+  setItem: (key, value) => {
+    localStorage.setItem(key, value);
+    // Also set cookie with SSO domain
+    const cookie = `${key}=${value}; path=/; max-age=604800; samesite=lax; domain=.sailorskills.com; secure`;
+    document.cookie = cookie;
+  },
+  removeItem: (key) => {
+    localStorage.removeItem(key);
+    document.cookie = `${key}=; path=/; max-age=-1; domain=.sailorskills.com`;
+  },
+};
+
+// Create Supabase client with SSO configuration
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
   import.meta.env.VITE_SUPABASE_ANON_KEY,
+  {
+    auth: {
+      storage: customStorage,
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true,
+      flowType: "pkce",
+    },
+    cookieOptions: {
+      name: "sb-auth-token",
+      domain: ".sailorskills.com",
+      path: "/",
+      sameSite: "lax",
+      maxAge: 604800,
+    },
+  },
 );
 
 /**
@@ -221,15 +264,15 @@ export async function isAuthenticated() {
 
 /**
  * Require authentication (middleware for protected routes)
- * Redirects to login if not authenticated
+ * Redirects to SSO login if not authenticated
  */
 export async function requireAuth() {
   const authenticated = await isAuthenticated();
 
   if (!authenticated) {
-    // Store intended destination
-    sessionStorage.setItem("redirectAfterLogin", window.location.pathname);
-    window.location.href = "/login.html";
+    // Redirect to SSO login service with return URL
+    const redirectUrl = encodeURIComponent(window.location.href);
+    window.location.href = `https://login.sailorskills.com/login.html?redirect=${redirectUrl}`;
     return false;
   }
 

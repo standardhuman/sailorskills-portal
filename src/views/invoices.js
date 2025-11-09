@@ -35,9 +35,89 @@ let currentBoatId = null;
 let currentCustomerId = null;
 let allInvoices = [];
 let filteredInvoices = [];
+let userBoats = [];
+let selectedBoatId = null;
+let isAdminUser = false;
 
 /**
- * Initialize impersonation banner
+ * Initialize admin selectors (customer and boat)
+ */
+async function initAdminSelectors() {
+  if (!isAdminUser) return;
+
+  const selectorsEl = document.getElementById("admin-selectors");
+  selectorsEl.style.display = "flex";
+
+  // Initialize customer selector
+  const customerSearch = document.getElementById("customer-search");
+  const customerDatalist = document.getElementById("customer-datalist");
+
+  const { customers, error } = await getAllCustomers();
+  if (error) {
+    console.error("Failed to load customers:", error);
+  } else {
+    customers.forEach((customer) => {
+      const option = document.createElement("option");
+      option.value = customer.displayText;
+      option.dataset.customerId = customer.id;
+      customerDatalist.appendChild(option);
+    });
+
+    customerSearch.addEventListener("change", async (e) => {
+      const selectedText = e.target.value;
+      const selectedOption = Array.from(customerDatalist.options).find(
+        (opt) => opt.value === selectedText,
+      );
+
+      if (selectedOption) {
+        const customerId = selectedOption.dataset.customerId;
+        const { success } = await setImpersonation(customerId);
+        if (success) window.location.reload();
+      }
+    });
+  }
+
+  // Initialize boat selector
+  const boatSearch = document.getElementById("boat-search");
+  const boatDatalist = document.getElementById("boat-datalist");
+
+  if (userBoats.length > 0) {
+    userBoats.forEach((boat) => {
+      const option = document.createElement("option");
+      option.value = boat.name + (boat.isPrimary ? " (Primary)" : "");
+      option.dataset.boatId = boat.id;
+      boatDatalist.appendChild(option);
+    });
+
+    // Set initial value
+    if (selectedBoatId) {
+      const selectedBoat = userBoats.find((b) => b.id === selectedBoatId);
+      if (selectedBoat) {
+        boatSearch.value =
+          selectedBoat.name + (selectedBoat.isPrimary ? " (Primary)" : "");
+      }
+    }
+
+    boatSearch.addEventListener("change", async (e) => {
+      const selectedText = e.target.value;
+      const selectedOption = Array.from(boatDatalist.options).find(
+        (opt) => opt.value === selectedText,
+      );
+
+      if (selectedOption) {
+        selectedBoatId = selectedOption.dataset.boatId;
+        localStorage.setItem("currentBoatId", selectedBoatId);
+        const boat = userBoats.find((b) => b.id === selectedBoatId);
+        currentBoatId = boat.id;
+        currentCustomerId = boat.customer_id;
+        await loadData();
+      }
+    });
+  }
+}
+
+/**
+ * Initialize impersonation banner (DEPRECATED - kept for compatibility)
  */
 async function initImpersonationBanner() {
   const impersonatedId = sessionStorage.getItem("impersonatedCustomerId");
@@ -129,10 +209,17 @@ async function init() {
   }
 
   currentUser = user;
-  document.getElementById("user-email").textContent = user.email;
 
-  // Initialize impersonation banner if active
-  await initImpersonationBanner();
+  // Check if user is admin
+  isAdminUser = await isAdmin(user.id);
+
+  // Set user email with admin badge if applicable
+  if (isAdminUser) {
+    document.getElementById("user-email").innerHTML =
+      `${user.email} <span style="display: inline-block; margin-left: 8px; padding: 2px 8px; background: #ff6b6b; color: white; border-radius: 4px; font-size: 11px; font-weight: 600;">ADMIN</span>`;
+  } else {
+    document.getElementById("user-email").textContent = user.email;
+  }
 
   // Get user's boats
   const { boats, error: boatsError } = await getUserBoats(currentUser.id);
@@ -146,11 +233,17 @@ async function init() {
     return;
   }
 
+  userBoats = boats;
+
   // Get current boat (from localStorage or first boat)
   const savedBoatId = localStorage.getItem("currentBoatId");
   const boat = boats.find((b) => b.id === savedBoatId) || boats[0];
   currentBoatId = boat.id;
+  selectedBoatId = boat.id;
   currentCustomerId = boat.customer_id;
+
+  // Initialize admin selectors
+  await initAdminSelectors();
 
   // Load data
   await loadData();

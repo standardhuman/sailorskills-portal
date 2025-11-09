@@ -369,20 +369,28 @@
     }
 
     /* Admin Customer Selector */
-    .admin-customer-selector {
+    /* Admin Selectors */
+    .admin-selectors {
+      display: flex;
+      gap: var(--ss-space-lg);
+      align-items: center;
+    }
+
+    .admin-selector-group {
       display: flex;
       align-items: center;
       gap: var(--ss-space-xs);
     }
 
-    .admin-customer-selector label {
+    .admin-selector-group label {
       font-size: var(--ss-text-sm);
       font-weight: 600;
       color: var(--ss-text-medium);
+      white-space: nowrap;
     }
 
-    .admin-customer-selector input {
-      width: 300px;
+    .admin-selector-group input {
+      width: 250px;
       padding: var(--ss-space-xs) var(--ss-space-sm);
       border: 1px solid var(--ss-border);
       border-radius: var(--ss-radius-none);
@@ -390,12 +398,12 @@
       font-family: var(--ss-font-primary);
     }
 
-    .admin-customer-selector input:focus {
+    .admin-selector-group input:focus {
       outline: none;
       border-color: var(--ss-primary);
     }
 
-    /* Impersonation Banner */
+    /* Impersonation Banner (DEPRECATED) */
     .impersonation-banner {
       background: #fef3c7;
       border-bottom: 2px solid #f59e0b;
@@ -499,48 +507,42 @@
     <div class="header-left">
       <h1>⚓ Sailor Skills</h1>
     </div>
-    <!-- Admin Customer Selector -->
-    <div class="admin-customer-selector" id="admin-customer-selector" style="display: none;">
-      <label for="customer-search">View as:</label>
-      <input
-        type="text"
-        id="customer-search"
-        placeholder="Search customers..."
-        autocomplete="off"
-        list="customer-datalist"
-      />
-      <datalist id="customer-datalist"></datalist>
+
+    <!-- Admin Selectors (shown only for admin users) -->
+    <div class="admin-selectors" id="admin-selectors" style="display: none;">
+      <!-- Customer Selector -->
+      <div class="admin-selector-group">
+        <label for="customer-search">View as:</label>
+        <input
+          type="text"
+          id="customer-search"
+          placeholder="Search customers..."
+          autocomplete="off"
+          list="customer-datalist"
+        />
+        <datalist id="customer-datalist"></datalist>
+      </div>
+
+      <!-- Boat Selector -->
+      <div class="admin-selector-group">
+        <label for="boat-search">Select Boat:</label>
+        <input
+          type="text"
+          id="boat-search"
+          placeholder="Search boats..."
+          autocomplete="off"
+          list="boat-datalist"
+        />
+        <datalist id="boat-datalist"></datalist>
+      </div>
     </div>
-    <!-- End Admin Customer Selector -->
+    <!-- End Admin Selectors -->
+
     <div class="header-right">
       <span class="user-email" id="user-email">Loading...</span>
       <button class="btn btn-secondary" id="logout-btn">Sign Out</button>
     </div>
   </header>
-
-  <!-- Impersonation Banner -->
-  <div class="impersonation-banner" id="impersonation-banner" style="display: none;">
-    <div class="banner-content">
-      <span class="banner-icon">🔍</span>
-      <span class="banner-text">Viewing as:</span>
-      <div class="banner-selector-wrapper">
-        <input
-          type="text"
-          id="banner-customer-search"
-          class="banner-customer-selector"
-          placeholder="Search customers..."
-          autocomplete="off"
-          list="banner-customer-datalist"
-        />
-        <button type="button" class="banner-dropdown-arrow" id="banner-dropdown-arrow" title="Show all customers">▼</button>
-      </div>
-      <datalist id="banner-customer-datalist"></datalist>
-    </div>
-    <button class="btn-exit-impersonation" id="exit-impersonation-btn">
-      Exit Customer View
-    </button>
-  </div>
-  <!-- End Impersonation Banner -->
 
   <!-- Portal Navigation -->
   <nav class="portal-nav">

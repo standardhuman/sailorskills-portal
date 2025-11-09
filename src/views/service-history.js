@@ -59,21 +59,101 @@ if (boatsError || !boats || boats.length === 0) {
 
 // Get the currently selected boat from localStorage (set by portal.js)
 let currentBoat = null;
-const savedBoatId = localStorage.getItem("currentBoatId");
-if (savedBoatId && boats.find((b) => b.id === savedBoatId)) {
-  currentBoat = boats.find((b) => b.id === savedBoatId);
+let selectedBoatId = localStorage.getItem("currentBoatId");
+if (selectedBoatId && boats.find((b) => b.id === selectedBoatId)) {
+  currentBoat = boats.find((b) => b.id === selectedBoatId);
 } else {
   // Select primary boat or first boat
   const primaryBoat = boats.find((b) => b.isPrimary);
   currentBoat = primaryBoat || boats[0];
+  selectedBoatId = currentBoat.id;
 }
+
+// Check if user is admin
+const isAdminUser = await isAdmin(user.id);
 
 // Playlist data (fetched once, used for all service logs)
 let boatPlaylist = null;
 let playlistVideos = [];
 
 /**
- * Initialize impersonation banner
+ * Initialize admin selectors (customer and boat)
+ */
+async function initAdminSelectors() {
+  if (!isAdminUser) return;
+
+  const selectorsEl = document.getElementById("admin-selectors");
+  selectorsEl.style.display = "flex";
+
+  // Initialize customer selector
+  const customerSearch = document.getElementById("customer-search");
+  const customerDatalist = document.getElementById("customer-datalist");
+
+  const { customers, error } = await getAllCustomers();
+  if (error) {
+    console.error("Failed to load customers:", error);
+  } else {
+    customers.forEach((customer) => {
+      const option = document.createElement("option");
+      option.value = customer.displayText;
+      option.dataset.customerId = customer.id;
+      customerDatalist.appendChild(option);
+    });
+
+    customerSearch.addEventListener("change", async (e) => {
+      const selectedText = e.target.value;
+      const selectedOption = Array.from(customerDatalist.options).find(
+        (opt) => opt.value === selectedText,
+      );
+
+      if (selectedOption) {
+        const customerId = selectedOption.dataset.customerId;
+        const { success } = await setImpersonation(customerId);
+        if (success) window.location.reload();
+      }
+    });
+  }
+
+  // Initialize boat selector
+  const boatSearch = document.getElementById("boat-search");
+  const boatDatalist = document.getElementById("boat-datalist");
+
+  if (boats.length > 0) {
+    boats.forEach((boat) => {
+      const option = document.createElement("option");
+      option.value = boat.name + (boat.isPrimary ? " (Primary)" : "");
+      option.dataset.boatId = boat.id;
+      boatDatalist.appendChild(option);
+    });
+
+    // Set initial value
+    if (selectedBoatId) {
+      const selectedBoat = boats.find((b) => b.id === selectedBoatId);
+      if (selectedBoat) {
+        boatSearch.value =
+          selectedBoat.name + (selectedBoat.isPrimary ? " (Primary)" : "");
+      }
+    }
+
+    boatSearch.addEventListener("change", async (e) => {
+      const selectedText = e.target.value;
+      const selectedOption = Array.from(boatDatalist.options).find(
+        (opt) => opt.value === selectedText,
+      );
+
+      if (selectedOption) {
+        selectedBoatId = selectedOption.dataset.boatId;
+        localStorage.setItem("currentBoatId", selectedBoatId);
+        currentBoat = boats.find((b) => b.id === selectedBoatId);
+        await loadServiceStats();
+        await loadServices();
+      }
+    });
+  }
+}
+
+/**
+ * Initialize impersonation banner (DEPRECATED - kept for compatibility)
  */
 async function initImpersonationBanner() {
   const impersonatedId = sessionStorage.getItem("impersonatedCustomerId");
@@ -165,11 +245,15 @@ function setupEventListeners() {
 
 // Initialize
 async function init() {
-  // Set user email
-  userEmailEl.textContent = user.email;
+  // Set user email with admin badge if applicable
+  if (isAdminUser) {
+    userEmailEl.innerHTML = `${user.email} <span style="display: inline-block; margin-left: 8px; padding: 2px 8px; background: #ff6b6b; color: white; border-radius: 4px; font-size: 11px; font-weight: 600;">ADMIN</span>`;
+  } else {
+    userEmailEl.textContent = user.email;
+  }
 
-  // Initialize impersonation banner if active
-  await initImpersonationBanner();
+  // Initialize admin selectors
+  await initAdminSelectors();
 
   // Setup event listeners
   setupEventListeners();

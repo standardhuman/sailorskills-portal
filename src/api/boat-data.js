@@ -326,39 +326,88 @@ export function daysSinceService(serviceDate) {
 }
 
 /**
+ * Convert anode percentage to condition label
+ * @param {number} percent - Anode condition percentage
+ * @returns {string} Condition label (excellent, good, fair, poor)
+ */
+export function convertAnodePercentToCondition(percent) {
+  if (percent >= 90) return "excellent";
+  if (percent >= 80) return "good";
+  if (percent >= 60) return "fair";
+  return "poor";
+}
+
+/**
+ * Check if anode was recently replaced
+ * @param {string} checkedDate - ISO date string
+ * @param {string} serviceDate - ISO date string
+ * @returns {boolean} True if replaced within 30 days of service
+ */
+export function isAnodeReplaced(checkedDate, serviceDate) {
+  if (!checkedDate || !serviceDate) return false;
+
+  const checked = new Date(checkedDate);
+  const service = new Date(serviceDate);
+  const daysDiff = Math.abs((checked - service) / (1000 * 60 * 60 * 24));
+
+  return daysDiff <= 30;
+}
+
+/**
  * Determine if paint is due for repainting based on condition and time
  * @param {string} paintCondition - Paint condition value
  * @param {number} daysSince - Days since last service
  * @returns {Object} Status object with isDue, status, message
  */
 export function getPaintStatus(paintCondition, daysSince) {
-  // Condition is already normalized to format like "fair-poor"
-  const condition = paintCondition.toLowerCase().trim();
+  // Normalize condition to severity score (0 = best, 8 = worst)
+  const severityMap = {
+    excellent: 0,
+    "excellent-good": 1,
+    good: 2,
+    "good-fair": 3,
+    fair: 4,
+    "fair-poor": 5,
+    poor: 6,
+    "very-poor": 7,
+    "not-inspected": 8,
+  };
 
-  // Paint condition threshold: good-fair = time to consider repainting
-  // fair-poor or worse = past due
-  const needsRepaint = ["fair-poor", "poor", "missing", "very-poor"].includes(
-    condition,
-  );
-  const shouldConsider = ["good-fair", "fair"].includes(condition);
+  const severity = severityMap[paintCondition.toLowerCase()] ?? 4;
 
-  let status = "good";
-  let message = "Paint condition is good";
-  let isDue = false;
-
-  if (needsRepaint) {
-    status = "past-due";
-    message = "Paint needs attention soon";
-    isDue = true;
-  } else if (shouldConsider) {
-    status = "due-soon";
-    message = "Consider repainting in the near future";
-    isDue = false;
-  } else if (["excellent", "excellent-good", "good"].includes(condition)) {
-    status = "good";
-    message = "Paint condition is excellent";
-    isDue = false;
+  // Urgency based on condition + time
+  if (severity <= 1 && daysSince < 180) {
+    return {
+      isDue: false,
+      status: "good",
+      message: "✓ No action needed - Paint in excellent condition",
+      urgency: "low",
+    };
   }
 
-  return { isDue, status, message };
+  if (severity <= 2 && daysSince < 365) {
+    return {
+      isDue: false,
+      status: "good",
+      message: "✓ Monitor condition - Check again in 3-6 months",
+      urgency: "low",
+    };
+  }
+
+  if (severity <= 4 || daysSince >= 365) {
+    return {
+      isDue: true,
+      status: "due-soon",
+      message: "⚠️ Plan haul-out - Repainting recommended within 6 months",
+      urgency: "medium",
+    };
+  }
+
+  // Poor or very poor condition
+  return {
+    isDue: true,
+    status: "past-due",
+    message: "🔴 Schedule haul-out now - Paint requires immediate attention",
+    urgency: "high",
+  };
 }

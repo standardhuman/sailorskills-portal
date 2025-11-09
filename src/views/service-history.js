@@ -21,7 +21,12 @@ import {
   formatHours,
   getConditionClass,
 } from "../api/service-logs.js";
-import { getBoatPlaylist, getPlaylistVideos } from "../api/boat-data.js";
+import {
+  getBoatPlaylist,
+  getPlaylistVideos,
+  convertAnodePercentToCondition,
+  isAnodeReplaced,
+} from "../api/boat-data.js";
 
 // Require authentication (redirects to SSO login)
 const isAuth = await requireAuth();
@@ -431,24 +436,6 @@ function createTimelineItem(log, index, nextServiceDate = null) {
           </div>
           ${hasDetails ? '<span class="expand-icon">▼</span>' : ""}
         </div>
-
-        ${
-          badges.length > 0
-            ? `
-          <div class="condition-badges-row">
-            ${badges
-              .map(
-                (badge) => `
-              <span class="condition-badge ${badge.class}">
-                ${escapeHtml(badge.label)}
-              </span>
-            `,
-              )
-              .join("")}
-          </div>
-        `
-            : ""
-        }
       </div>
 
       ${
@@ -561,47 +548,47 @@ function createAnodesSection(log) {
   return `
     <div class="detail-section">
       <h4>⚓ Anode Inspection</h4>
-      <ul class="anode-list">
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;">
         ${anodeConditions
           .map((anode) => {
             const location = anode.location || anode.type || "";
             const position = anode.position ? ` (${anode.position})` : "";
             const locationText =
-              location || position ? `${location}${position}`.trim() : "";
-            const condition =
-              anode.condition_percent !== undefined
-                ? `${anode.condition_percent}%`
-                : anode.condition || anode.overall_condition || "N/A";
+              location || position ? `${location}${position}`.trim() : "Anode";
 
-            // Check if this anode was replaced
-            const replacement =
-              log.anodes_installed &&
-              log.anodes_installed.find(
-                (installed) =>
-                  installed.location &&
-                  installed.location.toLowerCase() === location.toLowerCase() &&
-                  (!installed.position ||
-                    !anode.position ||
-                    installed.position.toLowerCase() ===
-                      anode.position.toLowerCase()),
+            // Convert percentage to condition label
+            let condition;
+            let isReplaced = false;
+
+            if (anode.condition_percent !== undefined) {
+              condition = convertAnodePercentToCondition(
+                anode.condition_percent,
               );
+              isReplaced = isAnodeReplaced(
+                anode.checked_date,
+                log.service_date,
+              );
+            } else {
+              condition = anode.condition || anode.overall_condition || "N/A";
+            }
+
+            // Build badge HTML
+            const badgeHtml = `<span class="condition-badge ${getConditionClass(condition)}">${escapeHtml(condition.charAt(0).toUpperCase() + condition.slice(1))}</span>`;
+
+            // Add REPLACED badge if applicable
+            const replacedBadge = isReplaced
+              ? `<span class="condition-badge" style="background: #d1fae5; color: #065f46; margin-left: 8px;">✓ REPLACED</span>`
+              : "";
 
             return `
-            <li class="anode-item">
-              <div style="display: flex; align-items: center; gap: var(--ss-space-xs);">
-                ${locationText ? `<strong style="font-size: var(--ss-text-sm); color: var(--ss-text-dark);">${escapeHtml(locationText)}</strong>` : ""}
-                ${replacement ? '<span style="color: var(--ss-status-success-text); font-size: var(--ss-text-xs);">✓ Replaced</span>' : ""}
-              </div>
-              <div>
-                <span class="condition-badge ${getConditionClass(anode.condition || anode.overall_condition || "fair")}">
-                  ${escapeHtml(condition)}
-                </span>
-              </div>
-            </li>
+            <div class="condition-item-card" style="background: #fafbfc;">
+              <div class="condition-item-label">${escapeHtml(locationText)}</div>
+              ${badgeHtml}${replacedBadge}
+            </div>
           `;
           })
           .join("")}
-      </ul>
+      </div>
     </div>
   `;
 }
@@ -646,24 +633,22 @@ function createPropellersSection(log) {
   return `
     <div class="detail-section">
       <h4>Propeller Condition</h4>
-      <ul class="anode-list">
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;">
         ${propellers
           .map((prop, index) => {
             const label = getPropellerLabel(index, propellers.length);
             return `
-          <li class="anode-item">
-            ${label ? `<div><strong style="font-size: var(--ss-text-sm); color: var(--ss-text-dark);">${label}</strong></div>` : ""}
-            <div>
-              <span class="condition-badge ${getConditionClass(prop.condition || "good")}">
-                ${escapeHtml(prop.condition || "N/A")}
-              </span>
-            </div>
-          </li>
-          ${prop.notes ? `<div style="padding-left: var(--ss-space-md); font-size: var(--ss-text-xs); color: var(--ss-text-medium); font-style: italic;">${escapeHtml(prop.notes)}</div>` : ""}
+          <div class="condition-item-card">
+            <div class="condition-item-label">${label || "Propeller"}</div>
+            <span class="condition-badge ${getConditionClass(prop.condition || "good")}">
+              ${escapeHtml(prop.condition || "N/A")}
+            </span>
+            ${prop.notes ? `<div style="margin-top: 6px; font-size: 11px; color: #6b7280; font-style: italic;">${escapeHtml(prop.notes)}</div>` : ""}
+          </div>
         `;
           })
           .join("")}
-      </ul>
+      </div>
       ${
         log.propeller_notes
           ? `

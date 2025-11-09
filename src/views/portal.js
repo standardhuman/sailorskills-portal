@@ -23,6 +23,8 @@ import {
   getBoatPlaylist,
   getLatestServiceLog,
   getPlaylistVideos,
+  convertAnodePercentToCondition,
+  isAnodeReplaced,
 } from "../api/boat-data.js";
 import { formatDate, getConditionClass } from "../api/service-logs.js";
 
@@ -81,7 +83,81 @@ let selectedBoatId = null;
 let isAdminUser = false;
 
 /**
- * Initialize impersonation banner
+ * Initialize admin selectors (customer and boat)
+ */
+async function initAdminSelectors() {
+  if (!isAdminUser) return;
+
+  const selectorsEl = document.getElementById("admin-selectors");
+  selectorsEl.style.display = "flex";
+
+  // Initialize customer selector
+  const customerSearch = document.getElementById("customer-search");
+  const customerDatalist = document.getElementById("customer-datalist");
+
+  const { customers, error } = await getAllCustomers();
+  if (error) {
+    console.error("Failed to load customers:", error);
+  } else {
+    customers.forEach((customer) => {
+      const option = document.createElement("option");
+      option.value = customer.displayText;
+      option.dataset.customerId = customer.id;
+      customerDatalist.appendChild(option);
+    });
+
+    customerSearch.addEventListener("change", async (e) => {
+      const selectedText = e.target.value;
+      const selectedOption = Array.from(customerDatalist.options).find(
+        (opt) => opt.value === selectedText,
+      );
+
+      if (selectedOption) {
+        const customerId = selectedOption.dataset.customerId;
+        const { success } = await setImpersonation(customerId);
+        if (success) window.location.reload();
+      }
+    });
+  }
+
+  // Initialize boat selector
+  const boatSearch = document.getElementById("boat-search");
+  const boatDatalist = document.getElementById("boat-datalist");
+
+  if (userBoats.length > 0) {
+    userBoats.forEach((boat) => {
+      const option = document.createElement("option");
+      option.value = boat.name + (boat.isPrimary ? " (Primary)" : "");
+      option.dataset.boatId = boat.id;
+      boatDatalist.appendChild(option);
+    });
+
+    // Set initial value
+    if (selectedBoatId) {
+      const selectedBoat = userBoats.find((b) => b.id === selectedBoatId);
+      if (selectedBoat) {
+        boatSearch.value =
+          selectedBoat.name + (selectedBoat.isPrimary ? " (Primary)" : "");
+      }
+    }
+
+    boatSearch.addEventListener("change", async (e) => {
+      const selectedText = e.target.value;
+      const selectedOption = Array.from(boatDatalist.options).find(
+        (opt) => opt.value === selectedText,
+      );
+
+      if (selectedOption) {
+        selectedBoatId = selectedOption.dataset.boatId;
+        localStorage.setItem("currentBoatId", selectedBoatId);
+        await loadBoatData();
+      }
+    });
+  }
+}
+
+/**
+ * Initialize impersonation banner (DEPRECATED - kept for compatibility)
  */
 async function initImpersonationBanner() {
   const impersonatedId = sessionStorage.getItem("impersonatedCustomerId");
@@ -239,11 +315,6 @@ async function init() {
     currentUser = user;
     console.log("[PORTAL DEBUG] currentUser set:", currentUser.email);
 
-    // Initialize impersonation banner if active
-    console.log("[PORTAL DEBUG] Calling initImpersonationBanner()...");
-    await initImpersonationBanner();
-    console.log("[PORTAL DEBUG] initImpersonationBanner() completed");
-
     // Check if user is admin
     console.log("[PORTAL DEBUG] Calling isAdmin()...");
     isAdminUser = await isAdmin(user.id);
@@ -265,10 +336,10 @@ async function init() {
     await loadBoats();
     console.log("[PORTAL DEBUG] loadBoats() completed");
 
-    // Initialize customer selector for admins
-    console.log("[PORTAL DEBUG] Calling initCustomerSelector()...");
-    await initCustomerSelector();
-    console.log("[PORTAL DEBUG] initCustomerSelector() completed");
+    // Initialize admin selectors (customer and boat) for admins
+    console.log("[PORTAL DEBUG] Calling initAdminSelectors()...");
+    await initAdminSelectors();
+    console.log("[PORTAL DEBUG] initAdminSelectors() completed");
 
     // Update welcome message
     console.log("[PORTAL DEBUG] Calling updateWelcomeMessage()...");
@@ -304,25 +375,6 @@ async function loadBoats() {
   console.log("[DEBUG] Boats loaded:", boats.length, "boat(s) found");
   userBoats = boats;
 
-  // Show selector if multiple boats OR if user is admin
-  const shouldShowSelector =
-    boats.length > 1 || (isAdminUser && boats.length > 0);
-
-  if (shouldShowSelector) {
-    const selectorEl = document.getElementById("boat-selector");
-    selectorEl.style.display = "block";
-
-    // Add admin indicator to selector label if admin
-    if (isAdminUser) {
-      const label = selectorEl.querySelector("label");
-      if (label && !label.querySelector(".admin-view-badge")) {
-        label.innerHTML = `Select Boat: <span class="admin-view-badge" style="color: #ff6b6b; font-size: 11px; font-weight: 600;">(Admin View - All Boats)</span>`;
-      }
-    }
-
-    populateBoatSelector(boats);
-  }
-
   // Set initial selected boat
   if (boats.length > 0) {
     // Check localStorage for previously selected boat
@@ -333,11 +385,6 @@ async function loadBoats() {
       // Select primary boat or first boat
       const primaryBoat = boats.find((b) => b.isPrimary);
       selectedBoatId = primaryBoat ? primaryBoat.id : boats[0].id;
-    }
-
-    // Update selector if visible
-    if (shouldShowSelector) {
-      document.getElementById("current-boat").value = selectedBoatId;
     }
 
     // Load boat data
@@ -897,21 +944,35 @@ function createAnodesSection(log) {
             const position = anode.position ? ` (${anode.position})` : "";
             const locationText =
               location || position ? `${location}${position}`.trim() : "Anode";
-            const condition =
-              anode.condition_percent !== undefined
-                ? `${anode.condition_percent}%`
-                : anode.condition || anode.overall_condition || "N/A";
-            const conditionClass =
-              anode.condition || anode.overall_condition || "fair";
+
+            // Convert percentage to condition label
+            let condition;
+            let isReplaced = false;
+
+            if (anode.condition_percent !== undefined) {
+              condition = convertAnodePercentToCondition(
+                anode.condition_percent,
+              );
+              isReplaced = isAnodeReplaced(
+                anode.checked_date,
+                log.service_date,
+              );
+            } else {
+              condition = anode.condition || anode.overall_condition || "N/A";
+            }
+
+            // Build badge HTML
+            const badgeHtml = `<span class="condition-badge ${getConditionClass(condition)}">${escapeHtml(condition.charAt(0).toUpperCase() + condition.slice(1))}</span>`;
+
+            // Add REPLACED badge if applicable
+            const replacedBadge = isReplaced
+              ? `<span class="condition-badge" style="background: #d1fae5; color: #065f46; margin-left: 8px;">✓ REPLACED</span>`
+              : "";
 
             return `
             <div class="condition-item-card" style="background: #fafbfc;">
               <div class="condition-item-label">${escapeHtml(locationText)}</div>
-              ${
-                anode.condition_percent !== undefined
-                  ? `<div style="font-size: 24px; font-weight: 700; color: var(--ss-text-dark);">${condition}</div>`
-                  : `<span class="condition-badge ${getConditionClass(conditionClass)}">${escapeHtml(condition)}</span>`
-              }
+              ${badgeHtml}${replacedBadge}
             </div>
           `;
           })

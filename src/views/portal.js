@@ -30,7 +30,10 @@ import { formatDate, getConditionClass } from "../api/service-logs.js";
 
 console.log("[PORTAL DEBUG] Module loaded, starting authentication...");
 
-// Process session from URL hash (if present)
+// IMPORTANT: Process session from URL hash BEFORE checking auth
+// This prevents race condition where requireAuth() redirects before session is set
+let hashTokenProcessed = false;
+
 console.log("[PORTAL DEBUG] Checking if URL contains session hash...");
 if (window.location.hash.includes("access_token")) {
   console.log(
@@ -64,15 +67,21 @@ if (window.location.hash.includes("access_token")) {
       if (error) {
         console.error("[PORTAL DEBUG] Failed to set session:", error);
         // Clear hash and redirect to login
-        window.location.href = "/login.html";
+        window.location.href =
+          "https://login.sailorskills.com/login.html?redirect=" +
+          encodeURIComponent(window.location.origin + "/portal.html");
         throw new Error("Session setup failed");
       }
 
       if (!data?.session) {
         console.error("[PORTAL DEBUG] setSession did not return a session!");
-        window.location.href = "/login.html";
+        window.location.href =
+          "https://login.sailorskills.com/login.html?redirect=" +
+          encodeURIComponent(window.location.origin + "/portal.html");
         throw new Error("No session after setSession");
       }
+
+      hashTokenProcessed = true;
 
       // Clean up the hash now that session is established
       console.log("[PORTAL DEBUG] Session established, cleaning URL hash");
@@ -83,13 +92,21 @@ if (window.location.hash.includes("access_token")) {
       );
     } catch (err) {
       console.error("[PORTAL DEBUG] Error processing tokens:", err);
-      window.location.href = "/login.html";
+      // Only redirect if error wasn't already handled above
+      if (
+        !err.message.includes("Session setup failed") &&
+        !err.message.includes("No session after setSession")
+      ) {
+        window.location.href =
+          "https://login.sailorskills.com/login.html?redirect=" +
+          encodeURIComponent(window.location.origin + "/portal.html");
+      }
       throw err;
     }
   }
 }
 
-// Require authentication (redirects to SSO login)
+// NOW check authentication (after hash processing completes)
 console.log("[PORTAL DEBUG] Calling requireAuth()...");
 const isAuth = await requireAuth();
 console.log("[PORTAL DEBUG] requireAuth() returned:", isAuth);

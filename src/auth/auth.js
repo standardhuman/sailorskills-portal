@@ -249,8 +249,10 @@ export async function logout() {
     // Clear session storage too
     sessionStorage.clear();
 
-    // Redirect to login page
-    window.location.href = "/login.html";
+    // Redirect to SSO login service
+    window.location.href =
+      "https://login.sailorskills.com/login.html?redirect=" +
+      encodeURIComponent(window.location.origin + "/portal.html");
 
     return { success: true, error: null };
   } catch (error) {

@@ -30,12 +30,45 @@ import { formatDate, getConditionClass } from "../api/service-logs.js";
 
 console.log("[PORTAL DEBUG] Module loaded, starting authentication...");
 
-// IMPORTANT: Process session from URL hash BEFORE checking auth
+// IMPORTANT: Process session from URL (hash OR query string) BEFORE checking auth
 // This prevents race condition where requireAuth() redirects before session is set
-let hashTokenProcessed = false;
+let authCallbackDetected = false;
 
-console.log("[PORTAL DEBUG] Checking if URL contains session hash...");
-if (window.location.hash.includes("access_token")) {
+// Check for PKCE flow callback (?code=) or hash-based tokens (#access_token=)
+console.log("[PORTAL DEBUG] Checking for auth callbacks...");
+const hasCodeParam = window.location.search.includes("code=");
+const hasHashToken = window.location.hash.includes("access_token");
+
+console.log("[PORTAL DEBUG] Auth callback detection:", {
+  hasCodeParam,
+  hasHashToken,
+});
+
+if (hasCodeParam) {
+  console.log("[PORTAL DEBUG] PKCE code parameter detected in query string");
+  authCallbackDetected = true;
+
+  // Supabase will handle this automatically with detectSessionInUrl: true
+  // Just give it a moment to process the callback
+  console.log(
+    "[PORTAL DEBUG] Waiting for Supabase to process PKCE callback...",
+  );
+  await new Promise((resolve) => setTimeout(resolve, 1500));
+
+  // Verify session was established
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  console.log("[PORTAL DEBUG] Session after PKCE:", { hasSession: !!session });
+
+  // Clean up the code param from URL
+  const url = new URL(window.location.href);
+  url.searchParams.delete("code");
+  window.history.replaceState(null, "", url.pathname);
+  console.log("[PORTAL DEBUG] Cleaned up code parameter from URL");
+}
+
+if (hasHashToken) {
   console.log(
     "[PORTAL DEBUG] access_token detected in hash, manually setting session...",
   );
@@ -81,7 +114,7 @@ if (window.location.hash.includes("access_token")) {
         throw new Error("No session after setSession");
       }
 
-      hashTokenProcessed = true;
+      authCallbackDetected = true;
 
       // Clean up the hash now that session is established
       console.log("[PORTAL DEBUG] Session established, cleaning URL hash");

@@ -91,7 +91,7 @@ export async function loginWithMagicLink(email) {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/portal`,
+        emailRedirectTo: "https://portal.sailorskills.com/portal",
       },
     });
 

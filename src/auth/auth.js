@@ -229,12 +229,25 @@ export async function logout() {
     // Clear impersonation state on logout
     clearImpersonation();
 
+    // Sign out from Supabase
     const { error } = await supabase.auth.signOut();
 
     if (error) throw error;
 
-    // Clear any local storage
-    localStorage.removeItem("currentBoatId");
+    // Clear ALL auth-related storage to prevent loops
+    const keys = Object.keys(localStorage);
+    keys.forEach((key) => {
+      if (
+        key.includes("supabase") ||
+        key.includes("sb-") ||
+        key === "currentBoatId"
+      ) {
+        localStorage.removeItem(key);
+      }
+    });
+
+    // Clear session storage too
+    sessionStorage.clear();
 
     // Redirect to login page
     window.location.href = "/login.html";

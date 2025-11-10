@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auth Debug - Sailor Skills</title>
+  <style>
+    body {
+      font-family: monospace;
+      padding: 20px;
+      background: #1a1a1a;
+      color: #00ff00;
+    }
+    .section {
+      margin: 20px 0;
+      padding: 15px;
+      border: 1px solid #333;
+      background: #0a0a0a;
+    }
+    h2 {
+      color: #00ffff;
+    }
+    pre {
+      background: #000;
+      padding: 10px;
+      overflow: auto;
+      max-height: 300px;
+    }
+    .error {
+      color: #ff0000;
+    }
+    .success {
+      color: #00ff00;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔍 Authentication Debug Tool</h1>
+
+  <div class="section">
+    <h2>Current URL</h2>
+    <pre id="url-info"></pre>
+  </div>
+
+  <div class="section">
+    <h2>URL Parameters</h2>
+    <pre id="url-params"></pre>
+  </div>
+
+  <div class="section">
+    <h2>URL Hash</h2>
+    <pre id="url-hash"></pre>
+  </div>
+
+  <div class="section">
+    <h2>localStorage (Supabase Keys)</h2>
+    <pre id="local-storage"></pre>
+  </div>
+
+  <div class="section">
+    <h2>Supabase Session Check</h2>
+    <pre id="session-check">Loading...</pre>
+  </div>
+
+  <div class="section">
+    <h2>Console Logs</h2>
+    <pre id="console-logs"></pre>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+    // Capture console logs
+    const logs = []
+    const originalLog = console.log
+    const originalError = console.error
+    console.log = (...args) => {
+      logs.push({ type: 'log', msg: args.join(' ') })
+      originalLog.apply(console, args)
+      updateConsoleLogs()
+    }
+    console.error = (...args) => {
+      logs.push({ type: 'error', msg: args.join(' ') })
+      originalError.apply(console, args)
+      updateConsoleLogs()
+    }
+
+    function updateConsoleLogs() {
+      document.getElementById('console-logs').innerHTML = logs.map(l =>
+        `<span class="${l.type === 'error' ? 'error' : 'success'}">[${l.type.toUpperCase()}] ${l.msg}</span>`
+      ).join('\n')
+    }
+
+    // Display URL info
+    document.getElementById('url-info').textContent = window.location.href
+
+    // Display URL params
+    const params = new URLSearchParams(window.location.search)
+    const paramObj = {}
+    params.forEach((value, key) => {
+      paramObj[key] = value
+    })
+    document.getElementById('url-params').textContent = JSON.stringify(paramObj, null, 2) || '(none)'
+
+    // Display hash
+    document.getElementById('url-hash').textContent = window.location.hash || '(none)'
+
+    // Display localStorage
+    const storageKeys = Object.keys(localStorage).filter(k => k.includes('supabase') || k.includes('sb-'))
+    const storageObj = {}
+    storageKeys.forEach(key => {
+      const value = localStorage.getItem(key)
+      try {
+        storageObj[key] = JSON.parse(value)
+      } catch {
+        storageObj[key] = value
+      }
+    })
+    document.getElementById('local-storage').textContent = JSON.stringify(storageObj, null, 2) || '(none found)'
+
+    // Check Supabase session
+    const supabaseUrl = 'https://fzygakldvvzxmahkdylq.supabase.co'
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6eWdha2xkdnZ6eG1haGtkeWxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQwODM4OTgsImV4cCI6MjA2OTY1OTg5OH0.8BNDF5zmpk2HFdprTjsdOWTDh_XkAPdTnGo7omtiVIk'
+
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      auth: {
+        storage: localStorage,
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true,
+        flowType: 'pkce'
+      }
+    })
+
+    console.log('🔍 Checking Supabase session...')
+
+    // Wait a moment for auto-detection
+    await new Promise(resolve => setTimeout(resolve, 1000))
+
+    const { data: { session }, error } = await supabase.auth.getSession()
+
+    const result = {
+      hasSession: !!session,
+      hasUser: !!session?.user,
+      user: session?.user ? {
+        id: session.user.id,
+        email: session.user.email,
+        role: session.user.user_metadata?.role
+      } : null,
+      error: error?.message,
+      sessionExpiry: session?.expires_at ? new Date(session.expires_at * 1000).toISOString() : null
+    }
+
+    console.log('Session check result:', result)
+
+    document.getElementById('session-check').innerHTML = session
+      ? `<span class="success">✅ SESSION FOUND</span>\n${JSON.stringify(result, null, 2)}`
+      : `<span class="error">❌ NO SESSION</span>\n${JSON.stringify(result, null, 2)}`
+
+    // If we have a code parameter, try to handle it
+    if (params.has('code')) {
+      console.log('🔑 Found code parameter, Supabase should handle automatically')
+    }
+  </script>
+</body>
+</html>

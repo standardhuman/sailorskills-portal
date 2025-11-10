@@ -30,6 +30,20 @@ import { formatDate, getConditionClass } from "../api/service-logs.js";
 
 console.log("[PORTAL DEBUG] Module loaded, starting authentication...");
 
+// IMPORTANT: Give Supabase time to auto-detect sessions from URL
+// Supabase's detectSessionInUrl handles various auth callbacks automatically
+console.log("[PORTAL DEBUG] Waiting for Supabase auto-detection...");
+await new Promise((resolve) => setTimeout(resolve, 500));
+
+// Check current session status
+const {
+  data: { session: initialSession },
+} = await supabase.auth.getSession();
+console.log("[PORTAL DEBUG] Initial session check:", {
+  hasSession: !!initialSession,
+  user: initialSession?.user?.email,
+});
+
 // IMPORTANT: Process session from URL (hash OR query string) BEFORE checking auth
 // This prevents race condition where requireAuth() redirects before session is set
 let authCallbackDetected = false;
@@ -42,6 +56,7 @@ const hasHashToken = window.location.hash.includes("access_token");
 console.log("[PORTAL DEBUG] Auth callback detection:", {
   hasCodeParam,
   hasHashToken,
+  url: window.location.href,
 });
 
 if (hasCodeParam) {

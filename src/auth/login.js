@@ -12,30 +12,60 @@ import {
 
 // Check if already authenticated or handle magic link callback
 (async () => {
-  // First, check for magic link tokens in URL (Supabase will auto-detect)
-  const {
-    data: { session },
-    error,
-  } = await supabase.auth.getSession();
+  try {
+    // Check for auth tokens in URL hash (magic link callback)
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const hasAuthToken = hashParams.has("access_token");
 
-  if (error) {
-    console.error("Session error:", error);
-  }
+    // Get current session
+    const {
+      data: { session },
+      error,
+    } = await supabase.auth.getSession();
 
-  if (session) {
-    // User is authenticated (either existing session or magic link callback)
-    const redirect =
-      sessionStorage.getItem("redirectAfterLogin") || "/portal.html";
-    sessionStorage.removeItem("redirectAfterLogin");
-    window.location.href = redirect;
-    return;
-  }
+    if (error) {
+      console.error("Session error:", error);
+    }
 
-  // Check for error in URL hash (magic link expired, etc.)
-  const hashParams = new URLSearchParams(window.location.hash.substring(1));
-  const errorDescription = hashParams.get("error_description");
-  if (errorDescription) {
-    showAlert("error", `Authentication error: ${errorDescription}`);
+    // Only redirect if we have a VALID session
+    if (session && session.user) {
+      // Verify the session is actually valid by checking expiry
+      const now = Math.floor(Date.now() / 1000);
+      if (session.expires_at && session.expires_at > now) {
+        console.log("Valid session found, redirecting to portal");
+        const redirect =
+          sessionStorage.getItem("redirectAfterLogin") || "/portal.html";
+        sessionStorage.removeItem("redirectAfterLogin");
+        window.location.href = redirect;
+        return;
+      } else {
+        console.log("Session expired, clearing");
+        await supabase.auth.signOut();
+      }
+    } else if (hasAuthToken) {
+      // Magic link callback with tokens, but session not established yet
+      // Wait a moment for Supabase to process the tokens
+      console.log("Auth tokens detected, waiting for session...");
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      // Check again
+      const {
+        data: { session: newSession },
+      } = await supabase.auth.getSession();
+      if (newSession && newSession.user) {
+        console.log("Session established after token processing");
+        window.location.href = "/portal.html";
+        return;
+      }
+    }
+
+    // Check for error in URL hash (magic link expired, etc.)
+    const errorDescription = hashParams.get("error_description");
+    if (errorDescription) {
+      showAlert("error", `Authentication error: ${errorDescription}`);
+    }
+  } catch (err) {
+    console.error("Login initialization error:", err);
   }
 })();
 

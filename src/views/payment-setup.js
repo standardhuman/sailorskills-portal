@@ -3,10 +3,14 @@
  * Handles adding payment methods to customer accounts
  */
 
-import { createSupabaseClient } from "../lib/supabase.js";
-
-// Initialize Supabase client
-const supabase = createSupabaseClient();
+// ✅ FIX #1: Import supabase instance and auth helpers directly
+import {
+  supabase,
+  requireAuth,
+  getCurrentUser,
+  getEffectiveUser,
+  logout,
+} from "../auth/auth.js";
 
 // Get Stripe publishable key from environment
 const STRIPE_PUBLISHABLE_KEY =
@@ -29,9 +33,6 @@ const paymentFormContainer = document.getElementById("payment-form-container");
 const successMessage = document.getElementById("success-message");
 const userEmailEl = document.getElementById("user-email");
 const logoutBtn = document.getElementById("logout-btn");
-
-// State
-let currentUser = null;
 
 /**
  * Show alert message
@@ -127,21 +128,17 @@ function initializeStripe() {
 
 /**
  * Get customer data
+ * ✅ FIX #3: Use getEffectiveUser() to handle impersonation correctly
  */
 async function getCustomerData() {
   try {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      throw new Error("Not authenticated");
-    }
+    const effectiveUser = await getEffectiveUser();
 
     // Get customer record
     const { data: customer, error } = await supabase
       .from("customers")
       .select("id, email, name, stripe_customer_id")
-      .eq("email", user.email)
+      .eq("email", effectiveUser.email)
       .single();
 
     if (error) {
@@ -231,54 +228,9 @@ async function handleSubmit(event) {
 }
 
 /**
- * Check authentication and load user
- */
-async function checkAuth() {
-  try {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      // Redirect to login
-      window.location.href = "/login.html?redirect=/portal-payment-setup.html";
-      return false;
-    }
-
-    currentUser = user;
-    userEmailEl.textContent = user.email;
-
-    return true;
-  } catch (error) {
-    console.error("Auth error:", error);
-    window.location.href = "/login.html";
-    return false;
-  }
-}
-
-/**
- * Handle logout
- */
-async function handleLogout() {
-  try {
-    await supabase.auth.signOut();
-    window.location.href = "/login.html";
-  } catch (error) {
-    console.error("Logout error:", error);
-    showAlert("error", "Failed to logout. Please try again.");
-  }
-}
-
-/**
  * Initialize page
  */
 async function init() {
-  // Check authentication
-  const isAuthenticated = await checkAuth();
-  if (!isAuthenticated) {
-    return;
-  }
-
   // Initialize Stripe
   const stripeInitialized = initializeStripe();
   if (!stripeInitialized) {
@@ -287,7 +239,8 @@ async function init() {
 
   // Setup event listeners
   paymentForm.addEventListener("submit", handleSubmit);
-  logoutBtn.addEventListener("click", handleLogout);
+  // ✅ FIX #4: Use logout helper from auth.js
+  logoutBtn.addEventListener("click", logout);
 
   // Check if customer already has a payment method
   try {
@@ -301,6 +254,19 @@ async function init() {
   } catch (error) {
     console.error("Error checking existing payment method:", error);
   }
+}
+
+// ✅ FIX #2: Use standard auth pattern at top level (like other portal views)
+const isAuth = await requireAuth();
+if (!isAuth) {
+  // requireAuth already handles redirect to login
+  throw new Error("Authentication required");
+}
+
+// Get current user and display email
+const currentUser = await getCurrentUser();
+if (userEmailEl && currentUser) {
+  userEmailEl.textContent = currentUser.email;
 }
 
 // Initialize when DOM is loaded

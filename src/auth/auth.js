@@ -6,33 +6,30 @@
 import { createClient } from "@supabase/supabase-js";
 
 /**
- * Custom storage with SSO cookie support
+ * Custom storage for Supabase using localStorage only
+ *
+ * Note: We use localStorage instead of cookies because Supabase session objects
+ * are typically 2-5KB and exceed the 4KB cookie size limit, causing truncation
+ * and authentication failures (429/400 errors).
  */
 const customStorage = {
   getItem: (key) => {
-    const localValue = localStorage.getItem(key);
-    if (localValue) return localValue;
-    // Fallback to cookie
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${key}=`);
-    if (parts.length === 2) {
-      return parts.pop().split(";").shift();
-    }
-    return null;
+    return localStorage.getItem(key);
   },
   setItem: (key, value) => {
     localStorage.setItem(key, value);
-    // Also set cookie with SSO domain
-    const cookie = `${key}=${value}; path=/; max-age=604800; samesite=lax; domain=.sailorskills.com; secure`;
-    document.cookie = cookie;
   },
   removeItem: (key) => {
     localStorage.removeItem(key);
-    document.cookie = `${key}=; path=/; max-age=-1; domain=.sailorskills.com`;
   },
 };
 
-// Create Supabase client with SSO configuration
+/**
+ * Supabase client for Portal service
+ *
+ * Uses localStorage for session persistence (default for @supabase/supabase-js).
+ * Cross-subdomain authentication is handled by the centralized login service.
+ */
 export const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
   import.meta.env.VITE_SUPABASE_ANON_KEY,
@@ -43,13 +40,6 @@ export const supabase = createClient(
       persistSession: true,
       detectSessionInUrl: true,
       flowType: "pkce",
-    },
-    cookieOptions: {
-      name: "sb-auth-token",
-      domain: ".sailorskills.com",
-      path: "/",
-      sameSite: "lax",
-      maxAge: 604800,
     },
   },
 );

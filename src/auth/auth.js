@@ -236,6 +236,9 @@ export async function logout() {
     // Clear any local storage
     localStorage.removeItem("currentBoatId");
 
+    // Redirect to login page
+    window.location.href = "/login.html";
+
     return { success: true, error: null };
   } catch (error) {
     console.error("Logout error:", error);

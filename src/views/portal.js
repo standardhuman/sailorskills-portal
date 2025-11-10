@@ -48,24 +48,49 @@ if (window.location.hash.includes("access_token")) {
   });
 
   if (accessToken) {
-    // Manually set the session using setSession
-    const { data, error } = await supabase.auth.setSession({
-      access_token: accessToken,
-      refresh_token: refreshToken || "",
-    });
+    try {
+      // Manually set the session using setSession
+      const { data, error } = await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken || "",
+      });
 
-    console.log("[PORTAL DEBUG] setSession result:", {
-      hasSession: !!data.session,
-      hasUser: !!data.user,
-      error: error?.message,
-    });
+      console.log("[PORTAL DEBUG] setSession result:", {
+        hasSession: !!data?.session,
+        hasUser: !!data?.user,
+        error: error?.message,
+      });
 
-    // DON'T clean up the hash yet - it can cause navigation issues
-    // We'll clean it up after the page fully initializes
+      if (error) {
+        console.error("[PORTAL DEBUG] Failed to set session:", error);
+        // Clear hash and redirect to login
+        window.location.href = "/login.html";
+        throw new Error("Session setup failed");
+      }
+
+      if (!data?.session) {
+        console.error("[PORTAL DEBUG] setSession did not return a session!");
+        window.location.href = "/login.html";
+        throw new Error("No session after setSession");
+      }
+
+      // Clean up the hash now that session is established
+      console.log("[PORTAL DEBUG] Session established, cleaning URL hash");
+      history.replaceState(
+        null,
+        "",
+        window.location.pathname + window.location.search,
+      );
+    } catch (err) {
+      console.error("[PORTAL DEBUG] Error processing tokens:", err);
+      window.location.href = "/login.html";
+      throw err;
+    }
   }
 }
 
 // Require authentication (redirects to SSO login)
+console.log("[PORTAL DEBUG] Calling requireAuth()...");
 const isAuth = await requireAuth();
 console.log("[PORTAL DEBUG] requireAuth() returned:", isAuth);
 

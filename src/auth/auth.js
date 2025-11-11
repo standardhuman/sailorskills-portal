@@ -249,10 +249,18 @@ export async function logout() {
     // Clear session storage too
     sessionStorage.clear();
 
+    // Clean up URL hash to remove any lingering tokens
+    if (window.location.hash) {
+      history.replaceState(
+        null,
+        "",
+        window.location.pathname + window.location.search,
+      );
+    }
+
     // Redirect to SSO login service
-    window.location.href =
-      "https://login.sailorskills.com/login.html?redirect=" +
-      encodeURIComponent(window.location.origin + "/portal.html");
+    // IMPORTANT: Don't include current URL as redirect if it has hash tokens
+    window.location.href = "https://login.sailorskills.com/login.html";
 
     return { success: true, error: null };
   } catch (error) {

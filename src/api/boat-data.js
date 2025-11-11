@@ -105,11 +105,14 @@ export async function getPaintCondition(boatId) {
   try {
     // Query for latest service that has paint condition data
     // (not just latest service overall, which might be anode-only, etc.)
+    // Also exclude "not_inspected" values to find the last actual inspection
     const { data, error } = await supabase
       .from("service_logs")
       .select("*")
       .eq("boat_id", boatId)
       .not("paint_condition_overall", "is", null)
+      .not("paint_condition_overall", "eq", "not_inspected")
+      .not("paint_condition_overall", "eq", "not-inspected")
       .order("service_date", { ascending: false })
       .limit(1);
 

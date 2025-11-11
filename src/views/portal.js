@@ -112,10 +112,10 @@ if (hasHashToken) {
         error: error?.message,
       });
 
-      if (error) {
+      if (error || !data?.session) {
         console.error(
           "[PORTAL DEBUG] Failed to set session (invalid/expired tokens):",
-          error,
+          error || "No session returned",
         );
         // Clear hash tokens before redirecting to prevent loop
         if (window.location.hash) {
@@ -127,30 +127,18 @@ if (hasHashToken) {
         }
         // Redirect to login without the failed tokens
         window.location.href = "https://login.sailorskills.com/login.html";
+      } else {
+        // Session established successfully
+        authCallbackDetected = true;
+
+        // Clean up the hash now that session is established
+        console.log("[PORTAL DEBUG] Session established, cleaning URL hash");
+        history.replaceState(
+          null,
+          "",
+          window.location.pathname + window.location.search,
+        );
       }
-
-      if (!data?.session) {
-        console.error("[PORTAL DEBUG] setSession did not return a session!");
-        // Clear hash tokens before redirecting
-        if (window.location.hash) {
-          history.replaceState(
-            null,
-            "",
-            window.location.pathname + window.location.search,
-          );
-        }
-        window.location.href = "https://login.sailorskills.com/login.html";
-      }
-
-      authCallbackDetected = true;
-
-      // Clean up the hash now that session is established
-      console.log("[PORTAL DEBUG] Session established, cleaning URL hash");
-      history.replaceState(
-        null,
-        "",
-        window.location.pathname + window.location.search,
-      );
     } catch (err) {
       console.error("[PORTAL DEBUG] Error processing tokens:", err);
       // Clear hash tokens and redirect to login

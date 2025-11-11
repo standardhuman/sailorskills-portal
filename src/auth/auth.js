@@ -286,8 +286,13 @@ export async function requireAuth() {
   const authenticated = await isAuthenticated();
 
   if (!authenticated) {
-    // Redirect to SSO login service with return URL
-    const redirectUrl = encodeURIComponent(window.location.href);
+    // Redirect to SSO login service (without hash tokens to prevent loops)
+    // Use pathname + search only, not the full href which may contain stale hash tokens
+    const cleanUrl =
+      window.location.origin +
+      window.location.pathname +
+      window.location.search;
+    const redirectUrl = encodeURIComponent(cleanUrl);
     window.location.href = `https://login.sailorskills.com/login.html?redirect=${redirectUrl}`;
     return false;
   }

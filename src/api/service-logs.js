@@ -202,8 +202,14 @@ export function getConditionClass(condition) {
     "very poor": "condition-very-poor",
     "very-poor": "condition-very-poor",
     critical: "condition-critical", // Legacy alias for very poor
-    sound: "condition-sound", // Through-hull specific condition
-    inspected: "condition-inspected", // General inspected status
+    sound: "condition-good", // Through-hull specific condition (sound = good)
+    inspected: "condition-good", // General inspected status (inspected = good)
+    // Growth levels
+    minimal: "condition-excellent",
+    "minimal-moderate": "condition-good",
+    moderate: "condition-fair",
+    "moderate-heavy": "condition-fair-poor",
+    heavy: "condition-poor",
   };
 
   // Anode-specific status mappings

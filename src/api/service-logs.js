@@ -188,6 +188,7 @@ export function getConditionClass(condition) {
   const conditionMap = {
     "not inspected": "condition-not-inspected",
     "not-inspected": "condition-not-inspected",
+    not_inspected: "condition-not-inspected", // Handle underscore variant
     excellent: "condition-excellent",
     "excellent-good": "condition-excellent-good",
     "excellent good": "condition-excellent-good",

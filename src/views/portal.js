@@ -1155,6 +1155,7 @@ function escapeHtml(text) {
 function formatConditionText(condition) {
   const textMap = {
     "not-inspected": "Not Inspected",
+    not_inspected: "Not Inspected",
     excellent: "Excellent",
     "excellent-good": "Excellent-Good",
     good: "Good",

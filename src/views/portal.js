@@ -24,7 +24,6 @@ import {
   getLatestServiceLog,
   getPlaylistVideos,
   convertAnodePercentToCondition,
-  isAnodeReplaced,
 } from "../api/boat-data.js";
 import { formatDate, getConditionClass } from "../api/service-logs.js";
 
@@ -984,7 +983,9 @@ function createConditionsSection(log) {
             ? `
           <div class="condition-item-card">
             <div class="condition-item-label">Through-Hulls</div>
-            <div style="font-size: 14px; color: var(--ss-text-dark); font-weight: 400;">${escapeHtml(log.thru_hull_condition)}</div>
+            <span class="condition-badge ${getConditionClass(log.thru_hull_condition.toLowerCase())}">
+              ${escapeHtml(formatConditionText(log.thru_hull_condition.toLowerCase()))}
+            </span>
           </div>
         `
             : ""
@@ -1024,6 +1025,25 @@ function createAnodesSection(log) {
     return "";
   }
 
+  // Parse anodes_installed to determine which anodes were replaced
+  let anodesInstalled = [];
+  if (log.anodes_installed) {
+    if (typeof log.anodes_installed === "string") {
+      try {
+        anodesInstalled = JSON.parse(log.anodes_installed);
+      } catch (e) {
+        console.error("Error parsing anodes_installed:", e);
+      }
+    } else {
+      anodesInstalled = log.anodes_installed;
+    }
+  }
+
+  // Ensure anodesInstalled is an array
+  if (!Array.isArray(anodesInstalled)) {
+    anodesInstalled = [];
+  }
+
   return `
     <div style="margin-top: 24px;">
       <h4 style="margin: 0 0 12px 0; font-size: 16px; font-weight: 600; color: var(--ss-text-dark);">⚓ Anode Inspection</h4>
@@ -1037,19 +1057,20 @@ function createAnodesSection(log) {
 
             // Convert percentage to condition label
             let condition;
-            let isReplaced = false;
-
             if (anode.condition_percent !== undefined) {
               condition = convertAnodePercentToCondition(
                 anode.condition_percent,
               );
-              isReplaced = isAnodeReplaced(
-                anode.checked_date,
-                log.service_date,
-              );
             } else {
               condition = anode.condition || anode.overall_condition || "N/A";
             }
+
+            // Check if this anode was replaced by matching location and position in anodes_installed
+            const isReplaced = anodesInstalled.some(
+              (installed) =>
+                installed.location === anode.location &&
+                installed.position === anode.position,
+            );
 
             // Build badge HTML
             const badgeHtml = `<span class="condition-badge ${getConditionClass(condition)}">${escapeHtml(condition.charAt(0).toUpperCase() + condition.slice(1))}</span>`;
@@ -1169,8 +1190,16 @@ function formatConditionText(condition) {
     minimal: "Minimal",
     moderate: "Moderate",
     heavy: "Heavy",
+    "moderate-heavy": "Moderate-Heavy",
+    "minimal-moderate": "Minimal-Moderate",
+    // Through-hull conditions
+    sound: "Sound",
+    inspected: "Inspected",
   };
-  return textMap[condition] || "Unknown";
+  // Fallback: capitalize first letter if not in map
+  return (
+    textMap[condition] || condition.charAt(0).toUpperCase() + condition.slice(1)
+  );
 }
 
 /**

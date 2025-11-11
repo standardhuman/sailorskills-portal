@@ -25,7 +25,6 @@ import {
   getBoatPlaylist,
   getPlaylistVideos,
   convertAnodePercentToCondition,
-  isAnodeReplaced,
 } from "../api/boat-data.js";
 
 // Require authentication (redirects to SSO login)
@@ -640,6 +639,25 @@ function createAnodesSection(log) {
 
   if (anodeConditions.length === 0) return "";
 
+  // Parse anodes_installed to determine which anodes were replaced
+  let anodesInstalled = [];
+  if (log.anodes_installed) {
+    if (typeof log.anodes_installed === "string") {
+      try {
+        anodesInstalled = JSON.parse(log.anodes_installed);
+      } catch (e) {
+        console.error("Error parsing anodes_installed:", e);
+      }
+    } else {
+      anodesInstalled = log.anodes_installed;
+    }
+  }
+
+  // Ensure anodesInstalled is an array
+  if (!Array.isArray(anodesInstalled)) {
+    anodesInstalled = [];
+  }
+
   return `
     <div class="detail-section">
       <h4>⚓ Anode Inspection</h4>
@@ -653,19 +671,20 @@ function createAnodesSection(log) {
 
             // Convert percentage to condition label
             let condition;
-            let isReplaced = false;
-
             if (anode.condition_percent !== undefined) {
               condition = convertAnodePercentToCondition(
                 anode.condition_percent,
               );
-              isReplaced = isAnodeReplaced(
-                anode.checked_date,
-                log.service_date,
-              );
             } else {
               condition = anode.condition || anode.overall_condition || "N/A";
             }
+
+            // Check if this anode was replaced by matching location and position in anodes_installed
+            const isReplaced = anodesInstalled.some(
+              (installed) =>
+                installed.location === anode.location &&
+                installed.position === anode.position,
+            );
 
             // Build badge HTML
             const badgeHtml = `<span class="condition-badge ${getConditionClass(condition)}">${escapeHtml(condition.charAt(0).toUpperCase() + condition.slice(1))}</span>`;

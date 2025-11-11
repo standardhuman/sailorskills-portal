@@ -961,7 +961,7 @@ function createConditionsSection(log) {
           <div class="condition-item-card">
             <div class="condition-item-label">Paint Condition</div>
             <span class="condition-badge ${getConditionClass(paintCondition.toLowerCase())}">
-              ${escapeHtml(paintCondition)}
+              ${escapeHtml(formatConditionText(paintCondition.toLowerCase()))}
             </span>
           </div>
         `
@@ -972,8 +972,8 @@ function createConditionsSection(log) {
             ? `
           <div class="condition-item-card">
             <div class="condition-item-label">Growth Level</div>
-            <span class="condition-badge" style="background: #e5e7eb; color: #4b5563;">
-              ${escapeHtml(growthLevel.charAt(0).toUpperCase() + growthLevel.slice(1))}
+            <span class="condition-badge ${getConditionClass(growthLevel.toLowerCase())}">
+              ${escapeHtml(formatConditionText(growthLevel.toLowerCase()))}
             </span>
           </div>
         `
@@ -1164,6 +1164,10 @@ function formatConditionText(condition) {
     poor: "Poor",
     missing: "Poor",
     "very-poor": "Very Poor",
+    // Growth levels
+    minimal: "Minimal",
+    moderate: "Moderate",
+    heavy: "Heavy",
   };
   return textMap[condition] || "Unknown";
 }

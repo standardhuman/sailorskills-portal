@@ -447,7 +447,7 @@ function createTimelineItem(log, index, nextServiceDate = null) {
   if (log.thru_hull_condition) {
     badges.push({
       label: `Through-Hulls: ${log.thru_hull_condition}`,
-      class: `condition-${log.thru_hull_condition.toLowerCase().replace(/\s+/g, "-")}`,
+      class: getConditionClass(log.thru_hull_condition),
     });
   }
 
@@ -520,6 +520,15 @@ function createTimelineItem(log, index, nextServiceDate = null) {
           </div>
           ${hasDetails ? '<span class="expand-icon">▼</span>' : ""}
         </div>
+        ${
+          badges.length > 0
+            ? `
+        <div class="condition-badges-row">
+          ${badges.map((badge) => `<span class="condition-badge ${badge.class}">${escapeHtml(badge.label)}</span>`).join("")}
+        </div>
+        `
+            : ""
+        }
       </div>
 
       ${

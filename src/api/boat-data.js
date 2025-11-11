@@ -375,6 +375,16 @@ export function getPaintStatus(paintCondition, daysSince) {
 
   const severity = severityMap[paintCondition.toLowerCase()] ?? 4;
 
+  // Special case: Not Inspected - don't show any maintenance warnings
+  if (paintCondition.toLowerCase() === "not-inspected") {
+    return {
+      isDue: false,
+      status: "unknown",
+      message: "⚪ No inspection data available",
+      urgency: "none",
+    };
+  }
+
   // Urgency based on condition + time
   if (severity <= 1 && daysSince < 180) {
     return {
@@ -385,7 +395,7 @@ export function getPaintStatus(paintCondition, daysSince) {
     };
   }
 
-  if (severity <= 2 && daysSince < 365) {
+  if (severity <= 3 && daysSince < 365) {
     return {
       isDue: false,
       status: "good",
@@ -394,7 +404,7 @@ export function getPaintStatus(paintCondition, daysSince) {
     };
   }
 
-  if (severity <= 4 || daysSince >= 365) {
+  if (severity >= 4 && severity <= 5) {
     return {
       isDue: true,
       status: "due-soon",

@@ -375,12 +375,12 @@ export function getPaintStatus(paintCondition, daysSince) {
 
   const severity = severityMap[paintCondition.toLowerCase()] ?? 4;
 
-  // Special case: Not Inspected - don't show any maintenance warnings
+  // Special case: Not Inspected - show neutral status without maintenance warnings
   if (paintCondition.toLowerCase() === "not-inspected") {
     return {
       isDue: false,
-      status: "unknown",
-      message: "⚪ No inspection data available",
+      status: "not-inspected",
+      message: "No recent paint inspection data",
       urgency: "none",
     };
   }

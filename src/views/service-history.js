@@ -431,16 +431,18 @@ function createTimelineItem(log, index, nextServiceDate = null) {
   const badges = [];
 
   if (log.paint_condition_overall) {
+    const paintCondition = log.paint_condition_overall.toLowerCase();
     badges.push({
-      label: `Paint: ${log.paint_condition_overall}`,
-      class: `condition-${log.paint_condition_overall.toLowerCase().replace(/\s+/g, "-")}`,
+      label: `Paint: ${formatConditionText(paintCondition)}`,
+      class: getConditionClass(paintCondition),
     });
   }
 
   if (log.growth_level) {
+    const growthLevel = log.growth_level.toLowerCase();
     badges.push({
-      label: `Growth: ${log.growth_level}`,
-      class: `condition-${log.growth_level.toLowerCase().replace(/\s+/g, "-")}`,
+      label: `Growth: ${formatConditionText(growthLevel)}`,
+      class: getConditionClass(growthLevel),
     });
   }
 
@@ -865,6 +867,37 @@ function showError(message) {
       <p>⚠️ ${escapeHtml(message)}</p>
     </div>
   `;
+}
+
+/**
+ * Format condition text for display
+ * @param {string} condition - Condition value
+ * @returns {string} Formatted text
+ */
+function formatConditionText(condition) {
+  const textMap = {
+    "not-inspected": "Not Inspected",
+    not_inspected: "Not Inspected",
+    excellent: "Excellent",
+    "excellent-good": "Excellent-Good",
+    good: "Good",
+    "good-fair": "Good-Fair",
+    fair: "Fair",
+    "fair-poor": "Fair-Poor",
+    poor: "Poor",
+    missing: "Poor",
+    "very-poor": "Very Poor",
+    // Growth levels
+    minimal: "Minimal",
+    moderate: "Moderate",
+    heavy: "Heavy",
+    // Through-hull conditions
+    sound: "Sound",
+    inspected: "Inspected",
+  };
+  return (
+    textMap[condition] || condition.charAt(0).toUpperCase() + condition.slice(1)
+  );
 }
 
 /**

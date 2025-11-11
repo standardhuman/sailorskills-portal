@@ -113,20 +113,33 @@ if (hasHashToken) {
       });
 
       if (error) {
-        console.error("[PORTAL DEBUG] Failed to set session:", error);
-        // Clear hash and redirect to login
-        window.location.href =
-          "https://login.sailorskills.com/login.html?redirect=" +
-          encodeURIComponent(window.location.origin + "/portal.html");
-        throw new Error("Session setup failed");
+        console.error(
+          "[PORTAL DEBUG] Failed to set session (invalid/expired tokens):",
+          error,
+        );
+        // Clear hash tokens before redirecting to prevent loop
+        if (window.location.hash) {
+          history.replaceState(
+            null,
+            "",
+            window.location.pathname + window.location.search,
+          );
+        }
+        // Redirect to login without the failed tokens
+        window.location.href = "https://login.sailorskills.com/login.html";
       }
 
       if (!data?.session) {
         console.error("[PORTAL DEBUG] setSession did not return a session!");
-        window.location.href =
-          "https://login.sailorskills.com/login.html?redirect=" +
-          encodeURIComponent(window.location.origin + "/portal.html");
-        throw new Error("No session after setSession");
+        // Clear hash tokens before redirecting
+        if (window.location.hash) {
+          history.replaceState(
+            null,
+            "",
+            window.location.pathname + window.location.search,
+          );
+        }
+        window.location.href = "https://login.sailorskills.com/login.html";
       }
 
       authCallbackDetected = true;
@@ -140,16 +153,15 @@ if (hasHashToken) {
       );
     } catch (err) {
       console.error("[PORTAL DEBUG] Error processing tokens:", err);
-      // Only redirect if error wasn't already handled above
-      if (
-        !err.message.includes("Session setup failed") &&
-        !err.message.includes("No session after setSession")
-      ) {
-        window.location.href =
-          "https://login.sailorskills.com/login.html?redirect=" +
-          encodeURIComponent(window.location.origin + "/portal.html");
+      // Clear hash tokens and redirect to login
+      if (window.location.hash) {
+        history.replaceState(
+          null,
+          "",
+          window.location.pathname + window.location.search,
+        );
       }
-      throw err;
+      window.location.href = "https://login.sailorskills.com/login.html";
     }
   }
 }

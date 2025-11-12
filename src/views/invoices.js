@@ -504,7 +504,7 @@ function setupEventListeners() {
               Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
             },
             body: JSON.stringify({
-              customerId: currentUser.id,
+              customerId: currentCustomerId,
             }),
           },
         );

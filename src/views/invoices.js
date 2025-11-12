@@ -11,6 +11,7 @@ import {
   isAdmin,
   setImpersonation,
   clearImpersonation,
+  supabase,
 } from "../auth/auth.js";
 import { getAllCustomers } from "../api/customers.js";
 import {
@@ -33,6 +34,7 @@ if (!isAuth) {
 let currentUser = null;
 let currentBoatId = null;
 let currentCustomerId = null;
+let currentStripeCustomerId = null; // Stripe customer ID for invoice queries
 let allInvoices = [];
 let filteredInvoices = [];
 let userBoats = [];
@@ -253,9 +255,46 @@ async function init() {
 }
 
 /**
+ * Get Stripe customer ID for the current customer
+ * @returns {Promise<string|null>} Stripe customer ID
+ */
+async function getStripeCustomerId() {
+  if (!currentCustomerId) return null;
+
+  try {
+    const { data, error } = await supabase
+      .from("customers")
+      .select("stripe_customer_id")
+      .eq("id", currentCustomerId)
+      .single();
+
+    if (error) throw error;
+
+    return data?.stripe_customer_id || null;
+  } catch (error) {
+    console.error("Error fetching Stripe customer ID:", error);
+    return null;
+  }
+}
+
+/**
  * Load invoice data
  */
 async function loadData() {
+  // Get Stripe customer ID for invoice queries
+  currentStripeCustomerId = await getStripeCustomerId();
+
+  if (!currentStripeCustomerId) {
+    console.warn(
+      "No Stripe customer ID found for customer:",
+      currentCustomerId,
+    );
+    showEmptyState(
+      "No billing information found. Please contact support to set up billing.",
+    );
+    return;
+  }
+
   // Load stats
   await loadStats();
 
@@ -269,7 +308,7 @@ async function loadData() {
 async function loadStats() {
   const { stats, error } = await getInvoiceStats(
     currentBoatId,
-    currentCustomerId,
+    currentStripeCustomerId,
   );
 
   if (error) {
@@ -303,7 +342,7 @@ async function loadStats() {
 async function loadInvoiceList() {
   const { invoices, error } = await loadInvoices(
     currentBoatId,
-    currentCustomerId,
+    currentStripeCustomerId,
   );
 
   if (error) {
